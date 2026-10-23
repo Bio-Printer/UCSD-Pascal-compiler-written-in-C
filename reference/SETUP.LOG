@@ -1,0 +1,245 @@
+
+
+Loading SYSTEM.MICRO (P-Code Interpreter tables) -- native boot, P-Code mode
+
+
+
+Type any key within 2 seconds to boot SYSTEM.PASCAL instead of SYSTEM.C: SYSTEM.C
+
+
+
+ /Welcome  BIGGY,  to
+
+
+
+U.C.S.D.  Pascal  System  II.0
+
+
+
+Current date is  10-Feb-79
+
+Command: E(dit, R(un, F(ile, C(omp, L(ink, X(ecute, A(ssem, D(ebug,? [II.0]F
+
+Filer: G(et, S(ave, W(hat, N(ew, L(dir, R(em, C(hng, T(rans, D(ate, Q(uit [B]PPrefix titles by what vol ? #5:
+
+Prefix is U138.3:Filer: G(et, S(ave, W(hat, N(ew, L(dir, R(em, C(hng, T(rans, D(ate, Q(uit [B]QCommand: E(dit, R(un, F(ile, C(omp, L(ink, X(ecute, A(ssem, D(ebug,? [II.0]CCompiling...
+
+Compile what text? SETUP
+
+To what codefile? SETUP
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+PASCAL Compiler [II.0.A.1]   EDN Built! 
+
+<edn0>..................................................
+
+<  50>..................................................
+
+< 100>..................................................
+
+< 150>....
+
+A        [ 9563 words]
+
+< 154>.....
+
+INITASCI [ 9574 words]
+
+< 159>..............................
+
+CUTHEAP  [ 9528 words]
+
+< 189>..............
+
+ENTER    [ 9455 words]
+
+< 203>..........................................
+
+NEXT     [ 9437 words]
+
+< 245>................
+
+SETUP1   [ 9430 words]
+
+< 261>..............................................
+
+SETUP2   [ 9412 words]
+
+< 307>...........................................
+
+INITTREE [ 9423 words]
+
+< 350>.......................
+
+INITS    [ 9612 words]
+
+< 373>.................................
+
+W        [ 9639 words]
+
+< 406>.....
+
+PAGE     [ 9621 words]
+
+< 411>..........
+
+HASSLEGO [ 9603 words]
+
+< 421>.............
+
+PART1    [ 9585 words]
+
+< 434>................
+
+PART2    [ 9547 words]
+
+< 450>......................
+
+PART3    [ 9529 words]
+
+< 472>.......................
+
+PART4    [ 9531 words]
+
+< 495>............................
+
+PART5    [ 9513 words]
+
+< 523>................
+
+PART6    [ 9495 words]
+
+< 539>..........
+
+TEACHSET [ 9506 words]
+
+< 549>............
+
+ASSERT   [ 9679 words]
+
+< 561>.................
+
+GETCH    [ 9679 words]
+
+< 578>.................
+
+GETSTR   [ 9639 words]
+
+< 595>..................................................
+
+< 645>...........
+
+TREESEAR [ 9639 words]
+
+< 656>......................
+
+DESPACE  [ 9639 words]
+
+< 678>.................
+
+QUIT     [ 9607 words]
+
+< 695>......................................
+
+CONTINUE [ 9632 words]
+
+< 733>........................
+
+SHOWFULL [ 9447 words]
+
+< 757>..................................................
+
+< 807>............................
+
+GETORDST [ 9419 words]
+
+< 835>..................................................
+
+< 885>...................................
+
+NUMTEACH [ 9468 words]
+
+< 920>...........................
+
+DOYOU    [ 9432 words]
+
+< 947>..............
+
+SHOWRADI [ 9385 words]
+
+< 961>........
+
+NEWRADIX [ 9396 words]
+
+< 969>......................
+
+GETVAL   [ 9334 words]
+
+< 991>............
+
+UPDATE   [ 9305 words]
+
+<1003>..........................
+
+ALOG2    [ 9181 words]
+
+<1029>.......
+
+NUMBERCH [ 9214 words]
+
+<1036>........................................
+
+SHOWSCAL [ 9196 words]
+
+<1076>...............
+
+SHOWALL  [ 9178 words]
+
+<1091>..............
+
+GETSCALV [ 9138 words]
+
+<1105>.........
+
+SCALARCH [ 9160 words]
+
+<1114>....................
+
+DOIT     [ 9280 words]
+
+<1134>.............
+
+SINGLE   [ 9356 words]
+
+<1147>.................
+
+PROMPTED [ 9338 words]
+
+<1164>..............
+
+CHANGE   [ 9349 words]
+
+<1178>...................................
+
+SETUP    [ 9472 words]
+
+<1213>..........................
+
+<1239>
+
+1239 lines
+
+Smallest available space = 9138 wordsCommand: E(dit, R(un, F(ile, C(omp, L(ink, X(ecute, A(ssem, D(ebug,? [II.0]

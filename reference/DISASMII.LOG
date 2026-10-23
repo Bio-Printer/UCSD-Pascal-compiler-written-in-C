@@ -1,0 +1,289 @@
+
+
+Loading SYSTEM.MICRO (P-Code Interpreter tables) -- native boot, P-Code mode
+
+
+
+Type any key within 2 seconds to boot SYSTEM.PASCAL instead of SYSTEM.C: SYSTEM.C
+
+
+
+ /Welcome  BIGGY,  to
+
+
+
+U.C.S.D.  Pascal  System  II.0
+
+
+
+Current date is  10-Feb-79
+
+Command: E(dit, R(un, F(ile, C(omp, L(ink, X(ecute, A(ssem, D(ebug,? [II.0]F
+
+Filer: G(et, S(ave, W(hat, N(ew, L(dir, R(em, C(hng, T(rans, D(ate, Q(uit [B]PPrefix titles by what vol ? #5:
+
+Prefix is U138.3:Filer: G(et, S(ave, W(hat, N(ew, L(dir, R(em, C(hng, T(rans, D(ate, Q(uit [B]QCommand: E(dit, R(un, F(ile, C(omp, L(ink, X(ecute, A(ssem, D(ebug,? [II.0]CCompiling...
+
+Compile what text? DISASM.II
+
+To what codefile? DISASMII
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+PASCAL Compiler [II.0.A.1]   EDN Built! 
+
+<edn0>..................................................
+
+<  50>..................................................
+
+< 100>............
+
+NEWOP    [ 8973 words]
+
+< 112>..................................................
+
+< 162>...
+
+INIT     [ 8984 words]
+
+< 165>..................................................
+
+< 215>........................
+
+BUFRESET [ 9029 words]
+
+< 239>............
+
+LASTBYTE [ 9011 words]
+
+< 251>................
+
+GETBYTE  [ 8993 words]
+
+< 267>.................
+
+GETBIG   [ 8964 words]
+
+< 284>.............
+
+GETWORD  [ 8957 words]
+
+< 297>................
+
+MOSTSIGB [ 8928 words]
+
+< 313>......................
+
+SHORTOP  [ 8881 words]
+
+< 335>............................................
+
+JUMPOPST [ 8801 words]
+
+< 379>..............
+
+ONEOP    [ 8823 words]
+
+< 393>.............................................
+
+OPTOP    [ 8812 words]
+
+< 438>.......................
+
+LOPTOP   [ 8805 words]
+
+< 461>......................
+
+TWOOP    [ 8776 words]
+
+< 483>...............................
+
+WORDOP   [ 8780 words]
+
+< 514>...............
+
+WORDSOP  [ 8740 words]
+
+< 529>..................................
+
+CMPRSSOP [ 8755 words]
+
+< 563>...............
+
+CMPRSS2O [ 8726 words]
+
+< 578>.......................
+
+CHRSOP   [ 8697 words]
+
+< 601>.....................
+
+BLKOP    [ 8668 words]
+
+< 622>.............................
+
+JUMPINFO [ 8610 words]
+
+< 651>........................
+
+PROCEJUR [ 8632 words]
+
+< 675>..................................................
+
+< 725>................
+
+ALLPROCS [ 8579 words]
+
+< 741>..................................
+
+SEGMINT  [ 8647 words]
+
+< 775>.........................
+
+ACTACCES [ 8614 words]
+
+< 800>...............................
+
+DATASEGI [ 8516 words]
+
+< 831>.....................
+
+PROCLOOK [ 8509 words]
+
+< 852>.................
+
+PROCGUID [ 8520 words]
+
+< 869>..................................................
+
+< 919>....................
+
+SEGMTGUI [ 8589 words]
+
+< 939>.......................................
+
+LEXGUIDE [ 8593 words]
+
+< 978>............................
+
+DISASSEM [ 8604 words]
+
+<1006>.............................................
+
+WRITEHDR [ 9022 words]
+
+<1051>...................
+
+JUMPSTUF [ 8993 words]
+
+<1070>.................
+
+PROCSTUF [ 8964 words]
+
+<1087>............
+
+HISTOGRA [ 8946 words]
+
+<1099>.........
+
+SHORT1   [ 8888 words]
+
+<1108>............................
+
+SHORT2   [ 8859 words]
+
+<1136>............................
+
+SHORTSTU [ 8870 words]
+
+<1164>.......
+
+SHORTST  [ 8910 words]
+
+<1171>.........
+
+ONEST    [ 8892 words]
+
+<1180>....................
+
+TWOST    [ 8874 words]
+
+<1200>.................................
+
+WORDST   [ 8856 words]
+
+<1233>...................
+
+LOPTST   [ 8838 words]
+
+<1252>......................
+
+WORDSST  [ 8820 words]
+
+<1274>.....................
+
+CMPRSSST [ 8802 words]
+
+<1295>...........................
+
+CMPRSS2S [ 8784 words]
+
+<1322>...................
+
+GINIT    [ 8777 words]
+
+<1341>...............
+
+GATHER   [ 8788 words]
+
+<1356>..................................................
+
+<1406>.....
+
+DATASET  [ 8850 words]
+
+<1411>...........................
+
+SETORDER [ 8861 words]
+
+<1438>.....................
+
+DATAHEAD [ 8861 words]
+
+<1459>..........
+
+PRINTDAT [ 8843 words]
+
+<1469>.......
+
+DATACOUN [ 8854 words]
+
+<1476>................................
+
+PAGE     [ 9055 words]
+
+<1508>........
+
+PROMPT   [ 9055 words]
+
+<1516>........
+
+CODESTAT [ 9077 words]
+
+<1524>.....
+
+1529 lines
+
+Smallest available space = 8509 wordsCommand: E(dit, R(un, F(ile, C(omp, L(ink, X(ecute, A(ssem, D(ebug,? [II.0]

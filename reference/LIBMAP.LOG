@@ -1,0 +1,105 @@
+
+
+Loading SYSTEM.MICRO (P-Code Interpreter tables) -- native boot, P-Code mode
+
+
+
+Type any key within 2 seconds to boot SYSTEM.PASCAL instead of SYSTEM.C: SYSTEM.C
+
+
+
+ /Welcome  BIGGY,  to
+
+
+
+U.C.S.D.  Pascal  System  II.0
+
+
+
+Current date is  10-Feb-79
+
+Command: E(dit, R(un, F(ile, C(omp, L(ink, X(ecute, A(ssem, D(ebug,? [II.0]F
+
+Filer: G(et, S(ave, W(hat, N(ew, L(dir, R(em, C(hng, T(rans, D(ate, Q(uit [B]PPrefix titles by what vol ? #5:
+
+Prefix is U138.3:Filer: G(et, S(ave, W(hat, N(ew, L(dir, R(em, C(hng, T(rans, D(ate, Q(uit [B]QCommand: E(dit, R(un, F(ile, C(omp, L(ink, X(ecute, A(ssem, D(ebug,? [II.0]CCompiling...
+
+Compile what text? LIBMAP
+
+To what codefile? LIBMAP
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+PASCAL Compiler [II.0.A.1]   EDN Built! 
+
+<edn0>..................................................
+
+<  50>..................................................
+
+< 100>..................................................
+
+< 150>........................
+
+BYTESWAP [ 9780 words]
+
+< 174>................
+
+TABLEFLI [ 9743 words]
+
+< 190>.........................
+
+FLIPTABL [ 9751 words]
+
+< 215>........................
+
+ALPHABET [ 9781 words]
+
+< 239>........................................
+
+COPYINTE [ 9479 words]
+
+< 279>................................................
+
+GETENTRY [ 9539 words]
+
+< 327>.....................
+
+REF      [ 9499 words]
+
+< 348>.......................
+
+READLINK [ 9532 words]
+
+< 371>..................................................
+
+< 421>........................
+
+PHASE2   [ 9737 words]
+
+< 445>.......................
+
+GETFILE  [ 9712 words]
+
+< 468>..................................................
+
+< 518>..........................................
+
+LIBMAP   [ 9770 words]
+
+< 560>..........
+
+570 lines
+
+Smallest available space = 9479 wordsCommand: E(dit, R(un, F(ile, C(omp, L(ink, X(ecute, A(ssem, D(ebug,? [II.0]

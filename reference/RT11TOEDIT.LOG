@@ -1,0 +1,115 @@
+
+
+Loading SYSTEM.MICRO (P-Code Interpreter tables) -- native boot, P-Code mode
+
+
+
+Type any key within 2 seconds to boot SYSTEM.PASCAL instead of SYSTEM.C: SYSTEM.C
+
+
+
+ /Welcome  BIGGY,  to
+
+
+
+U.C.S.D.  Pascal  System  II.0
+
+
+
+Current date is  10-Feb-79
+
+Command: E(dit, R(un, F(ile, C(omp, L(ink, X(ecute, A(ssem, D(ebug,? [II.0]F
+
+Filer: G(et, S(ave, W(hat, N(ew, L(dir, R(em, C(hng, T(rans, D(ate, Q(uit [B]PPrefix titles by what vol ? #5:
+
+Prefix is U138.3:Filer: G(et, S(ave, W(hat, N(ew, L(dir, R(em, C(hng, T(rans, D(ate, Q(uit [B]QCommand: E(dit, R(un, F(ile, C(omp, L(ink, X(ecute, A(ssem, D(ebug,? [II.0]CCompiling...
+
+Compile what text? RT11TOEDIT
+
+To what codefile? RT11TOEDIT
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+PASCAL Compiler [II.0.A.1]   EDN Built! 
+
+<edn0>..................................................
+
+<  50>...........
+
+DERAD50  [ 6380 words]
+
+<  61>.................................
+
+ENRAD    [ 6318 words]
+
+<  94>......
+
+SHOWDIR  [ 6344 words]
+
+< 100>.............................
+
+LOCATEFI [ 6293 words]
+
+< 129>.........................................
+
+GETWANTE [ 6286 words]
+
+< 170>.................
+
+GETOUTNA [ 6279 words]
+
+< 187>................................
+
+SINGETNA [ 6250 words]
+
+< 219>..........................
+
+PUTPAGE  [ 6221 words]
+
+< 245>................
+
+TRANSLAT [ 6118 words]
+
+< 261>..................................................
+
+< 311>..............
+
+TRANSING [ 6078 words]
+
+< 325>..................................................
+
+< 375>...........................
+
+XBINSING [ 6156 words]
+
+< 402>...............................
+
+XBINARY  [ 6149 words]
+
+< 433>.....................
+
+FINDFILE [ 6063 words]
+
+< 454>...............................
+
+RT11TOTE [ 6153 words]
+
+< 485>..................................................
+
+< 535>.
+
+536 lines
+
+Smallest available space = 6063 wordsCommand: E(dit, R(un, F(ile, C(omp, L(ink, X(ecute, A(ssem, D(ebug,? [II.0]

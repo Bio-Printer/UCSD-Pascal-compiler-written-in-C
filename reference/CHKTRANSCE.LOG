@@ -1,0 +1,55 @@
+
+
+Loading SYSTEM.MICRO (P-Code Interpreter tables) -- native boot, P-Code mode
+
+
+
+Type any key within 2 seconds to boot SYSTEM.PASCAL instead of SYSTEM.C: SYSTEM.C
+
+
+
+ /Welcome  BIGGY,  to
+
+
+
+U.C.S.D.  Pascal  System  II.0
+
+
+
+Current date is  10-Feb-79
+
+Command: E(dit, R(un, F(ile, C(omp, L(ink, X(ecute, A(ssem, D(ebug,? [II.0]F
+
+Filer: G(et, S(ave, W(hat, N(ew, L(dir, R(em, C(hng, T(rans, D(ate, Q(uit [B]PPrefix titles by what vol ? #5:
+
+Prefix is SMALL:Filer: G(et, S(ave, W(hat, N(ew, L(dir, R(em, C(hng, T(rans, D(ate, Q(uit [B]QCommand: E(dit, R(un, F(ile, C(omp, L(ink, X(ecute, A(ssem, D(ebug,? [II.0]CCompiling...
+
+Compile what text? CHKTRANSCE
+
+To what codefile? CHKTRANSCE
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+PASCAL Compiler [II.0.A.1]   EDN Built! 
+
+<edn0>....
+
+CLEANUPT [ 7128 words]
+
+<   4>......
+
+10 lines
+
+Smallest available space = 7128 wordsCommand: E(dit, R(un, F(ile, C(omp, L(ink, X(ecute, A(ssem, D(ebug,? [II.0]

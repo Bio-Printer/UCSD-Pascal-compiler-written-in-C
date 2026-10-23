@@ -1,0 +1,97 @@
+
+
+Loading SYSTEM.MICRO (P-Code Interpreter tables) -- native boot, P-Code mode
+
+
+
+Type any key within 2 seconds to boot SYSTEM.PASCAL instead of SYSTEM.C: SYSTEM.C
+
+
+
+ /Welcome  BIGGY,  to
+
+
+
+U.C.S.D.  Pascal  System  II.0
+
+
+
+Current date is  10-Feb-79
+
+Command: E(dit, R(un, F(ile, C(omp, L(ink, X(ecute, A(ssem, D(ebug,? [II.0]F
+
+Filer: G(et, S(ave, W(hat, N(ew, L(dir, R(em, C(hng, T(rans, D(ate, Q(uit [B]PPrefix titles by what vol ? #5:
+
+Prefix is U138.3:Filer: G(et, S(ave, W(hat, N(ew, L(dir, R(em, C(hng, T(rans, D(ate, Q(uit [B]QCommand: E(dit, R(un, F(ile, C(omp, L(ink, X(ecute, A(ssem, D(ebug,? [II.0]CCompiling...
+
+Compile what text? EDITTORT11
+
+To what codefile? EDITTORT11
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+PASCAL Compiler [II.0.A.1]   EDN Built! 
+
+<edn0>..................................................
+
+<  50>.
+
+DERAD50  [ 6633 words]
+
+<  51>..................................
+
+ENRAD50  [ 6583 words]
+
+<  85>...............
+
+SHOWDIR  [ 6564 words]
+
+< 100>...............................
+
+LOCATEFI [ 6513 words]
+
+< 131>...........................................
+
+FINDSPAC [ 6539 words]
+
+< 174>...............................................
+
+CLOSERT1 [ 6532 words]
+
+< 221>..............
+
+GETWANTE [ 6492 words]
+
+< 235>........................
+
+GETINNAM [ 6485 words]
+
+< 259>............
+
+RTPUT    [ 6478 words]
+
+< 271>................
+
+COPY     [ 6449 words]
+
+< 287>.........................
+
+EDITTORT [ 6471 words]
+
+< 312>.....................
+
+333 lines
+
+Smallest available space = 6449 wordsCommand: E(dit, R(un, F(ile, C(omp, L(ink, X(ecute, A(ssem, D(ebug,? [II.0]
