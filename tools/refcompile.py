@@ -32,9 +32,14 @@ CORPUS = {
     'LINKER':   ('U132B.2_PASCAL_LINKER_SOURCE.BLK', 'LINK', 'LINKER'),
     'PASCALIO': ('U136.3_LONG_INTEGER_SOURCE.BLK', 'PASCALIO', 'PASCALIO'),
     'BASIC':    ('U130.1_BASIC_SOURCE.BLK', 'BASIC', 'BASIC'),
+    'BASICIO':  ('U130.1_BASIC_SOURCE.BLK', 'BASICIO', 'BASICIO'),     # (with the OS's GLOBALS.TEXT: EXTRA)
 }
 for _u in ('COPYDUPDIR', 'DISASM.II', 'EDITTORT11', 'LIBMAP', 'MARKDUPDIR', 'RT11TOEDIT', 'SETUP'):
     CORPUS[_u.replace('.', '')] = ('U138.3_UTILITY_SOURCE.BLK', _u, _u.replace('.', '')[:10])
+
+
+# files a source includes that are not on its volume: put there from another
+EXTRA = {'BASICIO': {'GLOBALS.TEXT': ('U134.4_OS_SOURCE.BLK', 'GLOBALS.TEXT')}}   # (the same on U136.3 and U132B.2)
 
 
 def small_programs():
@@ -66,6 +71,11 @@ def compile_one(name, out_dir):
     unit5 = os.path.join(d, 'SRC.BLK')
     if vol:
         shutil.copy(os.path.join(BLK, vol), unit5)
+        if name in EXTRA:
+            v = ucsdvol.Volume(unit5)
+            for n, (ovol, ofile) in EXTRA[name].items():
+                v.write(n, *ucsdvol.Volume(os.path.join(BLK, ovol)).read(ofile))
+            v.save()
     else:
         v = ucsdvol.Volume.new('SMALL', 2000)
         for n, data in SMALL.items():
