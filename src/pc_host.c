@@ -49,7 +49,7 @@ int main(int argc, char **argv)
     USERINFO.SLOWTERM = FALSE;
     USERINFO.STUPID = FALSE;
     USERINFO.ALTMODE = 27;
-    if (setjmp(EXITCOMPILER) == 0)
+    if (setjmp(EXITPC) == 0)
         PASCALCOMPILER();
     putchar('\n');
     PCLOSE(USERINFO.WORKSYM, FALSE);

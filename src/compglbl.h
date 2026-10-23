@@ -10,13 +10,13 @@
 #ifdef __TINYC__
 #include <stddef.h>
 #include <string.h>
-#include <setjmp.h>
 typedef int INTEGER;
 typedef unsigned WORD;
 typedef unsigned char CHAR;
 typedef float REAL;
 #else
 #include <stdio.h>
+#include <stddef.h>
 #include <string.h>
 #include <stdint.h>
 #include <setjmp.h>
@@ -303,8 +303,16 @@ extern struct PFILE *LP;                        /* the listing (TEXT) */
 extern INTEGER CURBYTE, CURBLK;
 extern CHAR DISKBUF[512];
 
-/* EXIT(PASCALCOMPILER): back to the system (pc.c) */
-extern jmp_buf EXITCOMPILER;
+/* EXIT(PASCALCOMPILER): back to the system -- the P-machine's XIT (CSP 4),
+   as the Pascal does it: a function's address is its segment + 256 * its
+   procedure number; on the host a longjmp to main */
+void PASCALCOMPILER(void);
+#ifdef __TINYC__
+#define EXITCOMPILER() __cspv(4, (int)PASCALCOMPILER & 255, (int)PASCALCOMPILER >> 8)
+#else
+extern jmp_buf EXITPC;
+#define EXITCOMPILER() longjmp(EXITPC, 1)
+#endif
 
 /* ---- sets (sets.c) ---- */
 SETS *SETOF(SETS *s, int x, ...);           /* s := [x, ...] (the list ends with -1) */
@@ -344,7 +352,6 @@ void FINISHCOMPILE(void);
 void SCANSTRING(CHAR *STRG, INTEGER MAXLENG, CHAR STOPPER);    /* procs.c */
 
 /* the segment procedures */
-void PASCALCOMPILER(void);                      /* block.c: the compiler */
 void COMPINIT(void);                            /* compinit.c */
 void DECLARATIONPART(SETOFSYS *FSYS);          /* decpart.c */
 void BODYPART(SETOFSYS *FSYS, CTP FPROCP);      /* bodypart.c */
@@ -395,6 +402,9 @@ BOOLEAN RLT(REAL a, REAL b);
 #define NEWTYPE(v) ((STP)NEWVAR(struct STRUCTURE, v))
 #define NEWTYPE0() ((STP)PNEW(sizeof(struct STRUCTURE) - sizeof(((struct STRUCTURE *)0)->U)))
 #define NEWCONST(v) ((CSP)NEWVAR(struct CONSTREC, v))
+/* NEW(P, tag, tag ...) whose tags end the record early: up to field f */
+#define NEWUPTO(T, f) PNEW(offsetof(T, f) + sizeof(((T *)0)->f))
+#define NEWIDUPTO(f) ((CTP)NEWUPTO(struct IDENTIFIER, U.f))
 void *PNEW(int bytes);
 void PMARK(void **p);
 void PRELEASE(void *p);

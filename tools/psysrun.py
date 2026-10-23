@@ -20,7 +20,7 @@ from refcompile import TINYC
 sys.path.insert(0, os.path.join(TINYC, 'tools'))
 from psys import ensure_setup, BUILD, shell_script, shell_transcript
 
-PCCODE = os.path.join(ROOT, 'build', 'psys', 'PC.CODE')
+PCCODE = os.environ.get('PCCODE', os.path.join(ROOT, 'build', 'psys', 'PC.CODE'))
 
 
 def run_one(name):

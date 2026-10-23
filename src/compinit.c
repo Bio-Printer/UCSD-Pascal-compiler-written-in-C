@@ -46,7 +46,7 @@ static void ENTTYPE(const char *name, STP t)
 
 static CTP ENTFILE(const char *name, INTEGER addr)
 {
-    CTP cp = NEWID(V);                          /* NEW(CP, FORMALVARS, FALSE) */
+    CTP cp = NEWIDUPTO(V.VADDR);                /* NEW(CP, FORMALVARS, FALSE) */
     setname(cp, name);
     cp->IDTYPE = TEXTPTR;
     cp->KLASS = FORMALVARS;
@@ -156,7 +156,7 @@ static void ENTSPCPROCS(void)
             if (IN(I, &tinyset))
                 continue;                       /* GOTO 1 */
         ISFUNC = IN(I, &funcs);
-        LCP = NEWID(P);                         /* NEW(LCP, FUNC/PROC, SPECIAL) */
+        LCP = NEWIDUPTO(P.KEY);                 /* NEW(LCP, FUNC/PROC, SPECIAL) */
         memcpy(LCP->NAME, I <= 31 ? NA1 + 8 * (I - 1) : NA2 + 8 * (I - 32), 8);
         LCP->NEXT = NULL;
         LCP->IDTYPE = NULL;
@@ -188,7 +188,7 @@ static void ENTSTDPROCS(void)
         switch (I) {                            /* the parameter and the type (cases not listed: as before) */
         case 1:
             FTYPE = BOOLPTR;
-            PARAM = NEWID(V);                   /* NEW(PARAM, ACTUALVARS, FALSE) */
+            PARAM = NEWIDUPTO(V.VADDR);         /* NEW(PARAM, ACTUALVARS, FALSE) */
             PARAM->IDTYPE = INTPTR;
             PARAM->KLASS = ACTUALVARS;
             break;
@@ -201,7 +201,7 @@ static void ENTSTDPROCS(void)
             break;
         case 4:
             FTYPE = INTPTR;
-            PARAM = NEWID(V);                   /* NEW(PARAM, ACTUALVARS, FALSE) */
+            PARAM = NEWIDUPTO(V.VADDR);         /* NEW(PARAM, ACTUALVARS, FALSE) */
             PARAM->IDTYPE = REALPTR;
             PARAM->KLASS = ACTUALVARS;
             break;
@@ -210,7 +210,7 @@ static void ENTSTDPROCS(void)
             break;
         case 12:
             FTYPE = NULL;
-            PARAM = NEWID(V);                   /* NEW(PARAM, FORMALVARS, FALSE) */
+            PARAM = NEWIDUPTO(V.VADDR);         /* NEW(PARAM, FORMALVARS, FALSE) */
             LSP = NEWTYPE(ELTYPE);              /* NEW(LSP, POINTER) */
             LSP->SIZE = PTRSIZE;
             LSP->FORM = POINTER;
@@ -224,7 +224,7 @@ static void ENTSTDPROCS(void)
             break;
         case 15:
             FTYPE = BOOLPTR;
-            PARAM = NEWID(V);                   /* NEW(PARAM, ACTUALVARS, FALSE) */
+            PARAM = NEWIDUPTO(V.VADDR);         /* NEW(PARAM, ACTUALVARS, FALSE) */
             PARAM->IDTYPE = INTPTR;
             PARAM->KLASS = ACTUALVARS;
             break;
@@ -239,7 +239,7 @@ static void ENTSTDPROCS(void)
             PARAM = NULL;
             break;
         }
-        LCP = NEWID(P);                         /* NEW(LCP, PROC/FUNC, STANDARD) */
+        LCP = NEWIDUPTO(P.CSPNUM);              /* NEW(LCP, PROC/FUNC, STANDARD) */
         memcpy(LCP->NAME, NA + 8 * (I - 1), 8);
         LCP->U.P.PFDECKIND = STANDARD;
         LCP->U.P.CSPNUM = I + 20;

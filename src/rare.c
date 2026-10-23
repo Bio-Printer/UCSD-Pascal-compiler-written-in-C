@@ -50,11 +50,11 @@ void ERROR(INTEGER ERRORNUM)
         }
         if (CH == 'E' || CH == 'e') {
             USERINFO.ERRBLK = SYMBLK - 2;
-            longjmp(EXITCOMPILER, 1);                   /* EXIT(PASCALCOMPILER) */
+            EXITCOMPILER();                             /* EXIT(PASCALCOMPILER) */
         }
         if (ERRORNUM > 400 || CH == 27) {
             USERINFO.ERRBLK = 0;
-            longjmp(EXITCOMPILER, 1);
+            EXITCOMPILER();
         }
         WLN(NULL);
         if (NOISY) {
