@@ -255,7 +255,11 @@ static void ENTSTDPROCS(void)
 static void INITSCALARS(void)
 {
     INTEGER I;
-    if (MEMAVAIL() > 22000)                     /* TEMP */
+    /* (the Pascal's: above 9950 words, "an empirical value for a 50K byte
+       machine" -- both of its big segments and room for the heap.  These
+       segments are 11800 words: NOSWAP when there is room for them and as
+       much heap) */
+    if (MEMAVAIL() > 20000)
         NOSWAP = TRUE;
     else
         NOSWAP = FALSE;

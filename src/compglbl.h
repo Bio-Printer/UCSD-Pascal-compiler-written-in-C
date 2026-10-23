@@ -335,6 +335,14 @@ void WRITECODE(BOOLEAN FORCEBUF);
 void BLOCK(SETOFSYS *FSYS);
 void FINISHSEG(void);
 
+/* rare.c: what the compiler seldom does */
+INTEGER OPTIONS(CHAR STOPPER);
+void LONGNUMBER(INTEGER IPART, INTEGER ENDI, INTEGER K, INTEGER ISUM);
+void REALNUMBER(INTEGER IPART, INTEGER ENDI, INTEGER FPART, INTEGER ENDF,
+                INTEGER EPART, INTEGER ENDE, INTEGER SIGN);
+void FINISHCOMPILE(void);
+void SCANSTRING(CHAR *STRG, INTEGER MAXLENG, CHAR STOPPER);    /* procs.c */
+
 /* the segment procedures */
 void PASCALCOMPILER(void);                      /* block.c: the compiler */
 void COMPINIT(void);                            /* compinit.c */

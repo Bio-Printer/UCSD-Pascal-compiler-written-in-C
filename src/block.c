@@ -129,100 +129,11 @@ void BLOCK(SETOFSYS *FSYS)
     FINISHSEG();
 }
 
-/* the lines a minute, when it is more than 32767: two parts of at most 4 digits */
-static void WRITERATE(REAL RATE)
-{
-    LGTH = RTRUNC(RDIVR(RATE, RFLOAT(10000)));
-    STARTDOTS = RROUND(RSUB(RATE, RMUL(RFLOAT(LGTH), RFLOAT(10000))));
-    if (STARTDOTS < 0) {
-        LGTH = LGTH - 1;
-        STARTDOTS = STARTDOTS + 10000;
-    }
-    if (STARTDOTS >= 10000) {
-        LGTH = LGTH + 1;
-        STARTDOTS = STARTDOTS - 10000;
-    }
-    WINT(NULL, LGTH, 0);
-    if (STARTDOTS < 1000)
-        WCH(NULL, '0');
-    if (STARTDOTS < 100)
-        WCH(NULL, '0');
-    if (STARTDOTS < 10)
-        WCH(NULL, '0');
-    WINT(NULL, STARTDOTS, 0);
-}
-
 void PASCALCOMPILER(void)
 {
     SETS s, t;
-    REAL RATE;
     COMPINIT();
     PTIME(&LGTH, &LOWTIME);
     BLOCK(SETMINUS(&s, SETPLUS(&s, &BLOCKBEGSYS, &STATBEGSYS), SETOF(&t, CASESY, -1)));
-    if (SY != PERIOD)
-        ERROR(21);
-    if (LIST) {
-        SCREENDOTS = SCREENDOTS + 1;
-        SYMBUFP[SYMCURSOR] = EOL;
-        SYMCURSOR = SYMCURSOR + 1;
-        PRINTLINE();
-    }
-    USERINFO.ERRBLK = 0;
-    PTIME(&LGTH, &STARTDOTS);
-    LOWTIME = STARTDOTS - LOWTIME;
-    /* (UNITWRITE(3, IC, 7): to a graphics screen, unit 3 -- not here) */
-    if (DLINKERINFO || CLINKERINFO) {
-        SEGTABLE[SEG].SEGKIND = 1;
-        WRITELINKERINFO(TRUE);
-    }
-    PCLOSE(LP, TRUE);
-    if (NOISY)
-        WLN(NULL);
-    WINT(NULL, SCREENDOTS, 0);
-    WSTR(NULL, " lines");
-    if (LOWTIME > 0) {
-        /* the elapsed time and the lines a minute (REAL arithmetic, written as
-           integers: nothing that can exceed 32767 is ROUNDed or TRUNCed) */
-        STARTDOTS = RROUND(RDIVR(RFLOAT(LOWTIME), RFLOAT(6)));      /* tenths of a second */
-        WSTR(NULL, ", ");
-        WINT(NULL, STARTDOTS / 10, 0);
-        WSTR(NULL, ".");
-        WINT(NULL, STARTDOTS % 10, 0);
-        WSTR(NULL, " secs, ");
-        RATE = RMUL(RDIVR(RFLOAT(3600), RFLOAT(LOWTIME)), RFLOAT(SCREENDOTS));
-        if (RLT(RATE, RFLOAT(32767)))
-            WINT(NULL, RROUND(RATE), 0);
-        else
-            WRITERATE(RATE);
-        WSTR(NULL, " lines/min");
-    }
-    if (NOISY) {
-        WLN(NULL);
-        WSTR(NULL, "Smallest available space = ");
-        WINT(NULL, SMALLESTSPACE, 0);
-        WSTR(NULL, " words");
-    }
-    /* the segment dictionary */
-    IC = 0;
-    for (SEG = 0; SEG <= MAXSEG; SEG++) {
-        GENWORD(SEGTABLE[SEG].DISKADDR);
-        GENWORD(SEGTABLE[SEG].CODELENG);
-    }
-    for (SEG = 0; SEG <= MAXSEG; SEG++)
-        for (LGTH = 1; LGTH <= 8; LGTH++)
-            GENBYTE(SEGTABLE[SEG].SEGNAME[LGTH - 1]);
-    for (SEG = 0; SEG <= MAXSEG; SEG++)
-        GENWORD(SEGTABLE[SEG].SEGKIND);
-    for (SEG = 0; SEG <= MAXSEG; SEG++)
-        GENWORD(SEGTABLE[SEG].TEXTADDR);
-    for (LGTH = 1; LGTH <= 80; LGTH++)
-        if (COMMENT != NULL)
-            GENBYTE(COMMENT[LGTH]);
-        else
-            GENBYTE(0);
-    for (LGTH = 1; LGTH <= 256 - 8 * (MAXSEG + 1) - 40; LGTH++)
-        GENWORD(0);
-    CURBLK = 0;
-    CURBYTE = 0;
-    WRITECODE(TRUE);
+    FINISHCOMPILE();
 }

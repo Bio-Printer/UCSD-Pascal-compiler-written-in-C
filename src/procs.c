@@ -1,67 +1,13 @@
-/* procs.c -- PROCS.A.TEXT and PROCS.B.TEXT: errors, reading the source,
-   the listing, the scanner (INSYMBOL), the symbol table, constants, type
-   compatibility and the code buffer. */
+/* procs.c -- PROCS.A.TEXT and PROCS.B.TEXT: reading the source, the
+   listing, the scanner (INSYMBOL), the symbol table, constants, type
+   compatibility and the code buffer.  (ERROR, the options of a comment and
+   the long and REAL constants are in rare.c.) */
 #include "compglbl.h"
 #include "pcio.h"
 
 #define MOVELEFT(src, dst, n) memmove(dst, src, n)
 
 /* ======================== PROCS.A ======================== */
-
-void ERROR(INTEGER ERRORNUM)
-{
-    CHAR CH;
-    INTEGER ERRSTART;
-    CHAR A[180];
-    CH = 0;
-    if (USERINFO.ERRSYM != SYMCURSOR || USERINFO.ERRBLK != SYMBLK) {
-        USERINFO.ERRBLK = SYMBLK;
-        USERINFO.ERRSYM = SYMCURSOR;
-        USERINFO.ERRNUM = ERRORNUM;
-        if (USERINFO.STUPID)
-            CH = 'E';
-        else {
-            if (NOISY)
-                WLN(NULL);
-            else if (LIST && ERRORNUM <= 400)
-                return;                                 /* EXIT(ERROR) */
-            if (LINESTART == 0)
-                WPA(NULL, SYMBUFP, SYMCURSOR);
-            else {
-                ERRSTART = SCAN(-(LINESTART - 1), FALSE, EOL, &SYMBUFP[LINESTART - 2]) + LINESTART - 1;
-                MOVELEFT(&SYMBUFP[ERRSTART], &A[0], SYMCURSOR - ERRSTART);
-                WPA(NULL, A, SYMCURSOR - ERRSTART);
-            }
-            WSTR(NULL, " <<<<");
-            WLN(NULL);
-            WSTR(NULL, "Line ");
-            WINT(NULL, SCREENDOTS, 0);
-            WSTR(NULL, ", error ");
-            WINT(NULL, ERRORNUM, 0);
-            WSTR(NULL, ":");
-            if (NOISY)
-                WSTR(NULL, " <sp>(continue), <esc>(terminate), E(dit");
-            WCH(NULL, 7);
-            do
-                CH = RKEY();
-            while (!(CH == ' ' || CH == 'E' || CH == 'e' || CH == USERINFO.ALTMODE));
-        }
-        if (CH == 'E' || CH == 'e') {
-            USERINFO.ERRBLK = SYMBLK - 2;
-            longjmp(EXITCOMPILER, 1);                   /* EXIT(PASCALCOMPILER) */
-        }
-        if (ERRORNUM > 400 || CH == 27) {
-            USERINFO.ERRBLK = 0;
-            longjmp(EXITCOMPILER, 1);
-        }
-        WLN(NULL);
-        if (NOISY) {
-            WCH(NULL, '<');
-            WINT(NULL, SCREENDOTS, 4);
-            WCH(NULL, '>');
-        }
-    }
-}
 
 void GETNEXTPAGE(void)
 {
@@ -203,7 +149,7 @@ static void CHECKEND(void)
         LINEINFO = IC;
 }
 
-static void SCANSTRING(CHAR *STRG, INTEGER MAXLENG, CHAR STOPPER)
+void SCANSTRING(CHAR *STRG, INTEGER MAXLENG, CHAR STOPPER)
 {
     INTEGER LENG;
     SYMCURSOR = SYMCURSOR + 2;
@@ -217,119 +163,14 @@ static void SCANSTRING(CHAR *STRG, INTEGER MAXLENG, CHAR STOPPER)
    for its first symbol) */
 static BOOLEAN COMMENTER(CHAR STOPPER)
 {
-    CHAR CH, SW, DEL;
-    CHAR LTITLE[41];                                    /* STRING[40] */
-    CHAR T[48];
+    INTEGER R;
     SYMCURSOR = SYMCURSOR + 1;                          /* the first character past the opener */
     if (SYMBUFP[SYMCURSOR] == '$')
-        if (SYMBUFP[SYMCURSOR + 1] != STOPPER)
-            do {
-                CH = SYMBUFP[SYMCURSOR + 1];
-                SW = SYMBUFP[SYMCURSOR + 2];
-                DEL = SYMBUFP[SYMCURSOR + 3];
-                if (SW == ',' || SW == STOPPER) {
-                    DEL = SW;
-                    SW = '+';
-                    SYMCURSOR = SYMCURSOR - 1;
-                }
-                switch (CH) {
-                case 'C':
-                    if (LEVEL > 1)
-                        ERROR(194);
-                    COMMENT = PNEW(STRGLGTH + 1);       /* NEW(COMMENT): a STRING */
-                    SCANSTRING(COMMENT, 80, STOPPER);
-                    return FALSE;                       /* EXIT(COMMENTER) */
-                case 'D':
-                    DEBUGGING = SW == '+';
-                    break;
-                case 'F':
-                    FLIPBYTES = SW == '+';
-                    break;
-                case 'G':
-                    GOTOOK = SW == '+';
-                    break;
-                case 'I':
-                    if (SW == '+' || SW == '-')
-                        IOCHECK = SW == '+';
-                    else {
-                        SCANSTRING(LTITLE, 40, STOPPER);
-                        if (STOPPER == '*')
-                            SYMCURSOR = SYMCURSOR + 1;
-                        if (LIST) {
-                            SYMCURSOR = SYMCURSOR + 1;
-                            PRINTLINE();
-                            SYMCURSOR = SYMCURSOR - 1;
-                        }
-                        if (INCLUDING || (INMODULE && ININTERFACE)) {
-                            ERROR(406);
-                            return FALSE;
-                        }
-                        INCLFILE = POPENOLD(LTITLE);
-                        if (!INCLFILE) {
-                            memcpy(T, LTITLE, LTITLE[0] + 1);   /* CONCAT(LTITLE, '.TEXT') */
-                            memcpy(&T[T[0] + 1], ".TEXT", 5);
-                            T[0] = T[0] + 5;
-                            INCLFILE = POPENOLD(T);
-                            if (!INCLFILE)
-                                ERROR(403);
-                        }
-                        INCLUDING = TRUE;
-                        OLDSYMCURSOR = SYMCURSOR;
-                        OLDLINESTART = LINESTART;
-                        OLDSYMBLK = SYMBLK - 2;
-                        SYMBLK = 2;
-                        GETNEXTPAGE();
-                        INSYMBOL();
-                        return TRUE;                    /* EXIT(INSYMBOL) */
-                    }
-                    break;
-                case 'L':
-                    if (SW == '+' || SW == '-') {
-                        LIST = SW == '+';
-                        if (LIST) {
-                            static CHAR LST[] = "\020*SYSTEM.LST.TEXT";
-                            LP = POPENNEW(LST, TRUE);
-                        }
-                    } else {
-                        SCANSTRING(LTITLE, 40, STOPPER);
-                        LP = POPENNEW(LTITLE, TRUE);
-                        LIST = LP != NULL;
-                        return FALSE;
-                    }
-                    break;
-                case 'Q':
-                    NOISY = SW == '-';
-                    break;
-                case 'P':
-                    WCH(LP, 12);                        /* FF */
-                    break;
-                case 'R':
-                    RANGECHECK = SW == '+';
-                    break;
-                case 'S':
-                    NOSWAP = SW == '-';
-                    break;
-                case 'T':
-                    TINY = SW == '+';
-                    break;
-                case 'U':
-                    if (SW == '+' || SW == '-') {
-                        SYSCOMP = SW == '-';
-                        RANGECHECK = !SYSCOMP;
-                        IOCHECK = RANGECHECK;
-                        GOTOOK = SYSCOMP;
-                    } else if (!USING) {
-                        SCANSTRING(SYSTEMLIB, 40, STOPPER);
-                        if (LIBRARY)
-                            PCLOSE(LIBRARY, FALSE);
-                        LIBRARY = NULL;
-                        LIBNOTOPEN = TRUE;
-                        return FALSE;
-                    }
-                    break;
-                }
-                SYMCURSOR = SYMCURSOR + 3;
-            } while (DEL == ',');
+        if (SYMBUFP[SYMCURSOR + 1] != STOPPER) {
+            R = OPTIONS(STOPPER);
+            if (R != 0)
+                return R == 2;
+        }
     SYMCURSOR = SYMCURSOR - 1;                          /* adjust */
     do {
         do {
@@ -382,12 +223,10 @@ l1:
 
 static void NUMBER(void)
 {
-    INTEGER EXPONENT, ENDI, ENDF, ENDE, SIGN, IPART, FPART, EPART, ISUM;
+    INTEGER ENDI, ENDF, ENDE, SIGN, IPART, FPART, EPART, ISUM;
     INTEGER TIPE;                                       /* 0 REALTIPE, 1 INTEGERTIPE */
-    REAL RSUM;
     BOOLEAN NOTLONG;
     INTEGER K, J;
-    CSP LVP;
     /* takes a number and decides whether it's real or integer and converts it
        to the internal form */
     TIPE = 1;
@@ -445,57 +284,10 @@ static void NUMBER(void)
             SY = INTCONST;
             OP = NOOP;
             VAL.IVAL = ISUM;
-        } else {
-            if (ENDI - IPART >= MAXDEC) {
-                ERROR(203);
-                IPART = ENDI;
-                K = ENDI;
-            }
-            LVP = NEWCONST(L);        /* NEW(LVP, LONG) */
-            LVP->CCLASS = LONG;
-            J = 4;
-            LVP->U.L.LLENG = 0;
-            while (K <= ENDI) {
-                if (J == 4) {
-                    LVP->U.L.LLENG = LVP->U.L.LLENG + 1;
-                    LVP->U.L.LONGVAL[LVP->U.L.LLENG] = ISUM;
-                    ISUM = 0;
-                    J = 0;
-                }
-                ISUM = ISUM * 10 + SYMBUFP[K] - '0';
-                K = K + 1;
-                J = J + 1;
-            }
-            LVP->U.L.LLAST = J;
-            if (J > 0) {
-                LVP->U.L.LLENG = LVP->U.L.LLENG + 1;
-                LVP->U.L.LONGVAL[LVP->U.L.LLENG] = ISUM;
-            }
-            SY = LONGCONST;
-            OP = NOOP;
-            LGTH = ENDI - IPART + 1;
-            VAL.VALP = LVP;
-        }
-    } else {                                            /* a real number */
-        RSUM = RFLOAT(0);
-        for (J = IPART; J <= ENDI; J++)
-            RSUM = RADD(RMUL(RSUM, RFLOAT(10)), RFLOAT(SYMBUFP[J] - '0'));
-        for (J = ENDF; J >= FPART; J--)
-            RSUM = RADD(RSUM, RDIVR(RFLOAT(SYMBUFP[J] - '0'), RPOT(J - FPART + 1)));
-        EXPONENT = 0;
-        for (J = EPART; J <= ENDE; J++)
-            EXPONENT = EXPONENT * 10 + SYMBUFP[J] - '0';
-        if (SIGN == -1)
-            RSUM = RDIVR(RSUM, RPOT(EXPONENT));
-        else
-            RSUM = RMUL(RSUM, RPOT(EXPONENT));
-        SY = REALCONST;
-        OP = NOOP;
-        LVP = NEWCONST(RVAL);            /* NEW(LVP, REEL) */
-        LVP->CCLASS = REEL;
-        LVP->U.RVAL = RSUM;
-        VAL.VALP = LVP;
-    }
+        } else
+            LONGNUMBER(IPART, ENDI, K, ISUM);
+    } else                                              /* a real number */
+        REALNUMBER(IPART, ENDI, FPART, ENDF, EPART, ENDE, SIGN);
     SYMCURSOR = SYMCURSOR - 1;                          /* adjust for posterity */
 }
 

@@ -3,7 +3,7 @@
 compiles programs of the corpus from the Tiny-C shell, in the emulator, and
 each code file is compared with the reference as compare.py does.
 
-  psysrun.py [NAME ...]          (default: the whole corpus)
+  psysrun.py [-v] [NAME ...]     (default: the whole corpus; -v: the transcripts)
 
 The program's volume is unit #5 (the shell's cd #5), PC.CODE and the code
 file are on a work volume, unit #13: "#13:pc NAME #13:NAME.CODE".  The boot
@@ -75,7 +75,8 @@ def run_one(name):
 
 def main(args):
     ensure_setup()
-    names = args or list(CORPUS)
+    verbose = '-v' in args
+    names = [a for a in args if a != '-v'] or list(CORPUS)
     same = 0
     for n in names:
         ref = open(os.path.join(ROOT, 'reference', n + '.CODE'), 'rb').read()
@@ -93,6 +94,8 @@ def main(args):
             if not diffs and len(got) == len(ref):
                 print('%-12s identical on the P-System (%d bytes)' % (n, len(got)))
                 same += 1
+                if verbose:
+                    print(re.sub(r'\n+', '\n', tr)[-3000:])
             else:
                 print('%-12s DIFFERENT: %d bytes (reference %d), %d differ, the first at %s'
                       % (n, len(got), len(ref), len(diffs), diffs[:1]))
