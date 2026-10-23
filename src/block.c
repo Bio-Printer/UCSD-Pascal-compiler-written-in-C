@@ -32,7 +32,7 @@ void BLOCK(SETOFSYS *FSYS)
         return;                                 /* EXIT(BLOCK) */
     }
     if ((SY == UNITSY || SY == SEPARATSY) && !INMODULE) {
-        UNITPART(SETADD(&s, FSYS, UNITSY, INTERSY, IMPLESY, ENDSY, -1));
+        UNITPART(SETADD(&s, FSYS, UNITSY, INTERSY, IMPLESY, ENDSY, SETEND));
         if (SY == PERIOD)
             return;                             /* EXIT(BLOCK) */
     }
@@ -61,14 +61,14 @@ void BLOCK(SETOFSYS *FSYS)
             else
                 ERROR(17);
             do {
-                BODYPART(SETMINUS(&s, SETADD(&s, FSYS, CASESY, -1), SETOF(&u, ENDSY, -1)), TOS->DFPROCP);
+                BODYPART(SETMINUS(&s, SETADD(&s, FSYS, CASESY, SETEND), SETOF(&u, ENDSY, SETEND)), TOS->DFPROCP);
                 BFSYFOUND = SY == TOS->BFSY || (INMODULE && SY == ENDSY);
                 if (!BFSYFOUND) {
                     if (TOS->BFSY == SEMICOLON)
                         ERROR(14);              /* ; expected */
                     else
                         ERROR(6);               /* . expected */
-                    SKIP(SETADD(&s, FSYS, TOS->BFSY, -1));
+                    SKIP(SETADD(&s, FSYS, TOS->BFSY, SETEND));
                     BFSYFOUND = SY == TOS->BFSY || (INMODULE && SY == ENDSY);
                 }
             } while (!(BFSYFOUND || IN(SY, &BLOCKBEGSYS)));
@@ -120,7 +120,7 @@ void BLOCK(SETOFSYS *FSYS)
             DECLARATIONPART(FSYS);
             if (LEVEL == 0)
                 if (SY == UNITSY || SY == SEPARATSY) {
-                    UNITPART(SETADD(&s, FSYS, UNITSY, INTERSY, IMPLESY, ENDSY, -1));
+                    UNITPART(SETADD(&s, FSYS, UNITSY, INTERSY, IMPLESY, ENDSY, SETEND));
                     if (SY == PROCSY || SY == FUNCSY || SY == PROGSY)
                         DECLARATIONPART(FSYS);
                 }
@@ -134,6 +134,6 @@ void PASCALCOMPILER(void)
     SETS s, t;
     COMPINIT();
     PTIME(&LGTH, &LOWTIME);
-    BLOCK(SETMINUS(&s, SETPLUS(&s, &BLOCKBEGSYS, &STATBEGSYS), SETOF(&t, CASESY, -1)));
+    BLOCK(SETMINUS(&s, SETPLUS(&s, &BLOCKBEGSYS, &STATBEGSYS), SETOF(&t, CASESY, SETEND)));
     FINISHCOMPILE();
 }

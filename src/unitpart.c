@@ -443,7 +443,7 @@ void UNITPART(SETOFSYS *FSYS)
                 SKIP(SETMINUS(&s, FSYS, &STATBEGSYS));
             } else
                 INSYMBOL();
-            BLOCK(SETMINUS(&s, FSYS, SETOF(&u, SEPARATSY, UNITSY, INTERSY, IMPLESY, -1)));
+            BLOCK(SETMINUS(&s, FSYS, SETOF(&u, SEPARATSY, UNITSY, INTERSY, IMPLESY, SETEND)));
             if (REFBLK > 0)
                 if (PBLOCKWRITE(REFFILE, &(*REFLIST)[1], 1, REFBLK) != 1)
                     ERROR(402);

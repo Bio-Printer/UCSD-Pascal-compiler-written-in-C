@@ -550,7 +550,7 @@ void CONSTANT(SETOFSYS *FSYS, STP *FSP, VALU *FVALU)
                 INSYMBOL();
             }
             if (SY == IDENT) {
-                SEARCHID(SETOF(&s, KONST, -1), &LCP);
+                SEARCHID(SETOF(&s, KONST, SETEND), &LCP);
                 LSP = LCP->IDTYPE;
                 *FVALU = LCP->U.VALUES;
                 if (SIGN != 0) {

@@ -75,7 +75,7 @@ static void SIMPLETYPE(SETOFSYS *FSYS, STP *FSP, ADDRRANGE *FSIZE)
                     INSYMBOL();
                 } else
                     ERROR(2);
-                if (!IN(SY, SETADD(&s, FSYS, COMMA, RPARENT, -1))) {
+                if (!IN(SY, SETADD(&s, FSYS, COMMA, RPARENT, SETEND))) {
                     ERROR(6);
                     SKIP(&s);
                 }
@@ -88,7 +88,7 @@ static void SIMPLETYPE(SETOFSYS *FSYS, STP *FSP, ADDRRANGE *FSIZE)
                 ERROR(4);
         } else {
             if (SY == IDENT) {
-                SEARCHID(SETOF(&s, TYPES, KONST, -1), &LCP);
+                SEARCHID(SETOF(&s, TYPES, KONST, SETEND), &LCP);
                 INSYMBOL();
                 if (LCP->KLASS == KONST) {
                     LSP = NEWTYPE(SR);            /* NEW(LSP, SUBRANGE) */
@@ -112,7 +112,7 @@ static void SIMPLETYPE(SETOFSYS *FSYS, STP *FSP, ADDRRANGE *FSIZE)
                     LSP = LCP->IDTYPE;
                     if (LSP == STRGPTR && SY == LBRACK) {
                         INSYMBOL();
-                        CONSTANT(SETADD(&s, FSYS, RBRACK, -1), &LSP1, &LVALU);
+                        CONSTANT(SETADD(&s, FSYS, RBRACK, SETEND), &LSP1, &LVALU);
                         if (LSP1 == INTPTR) {
                             if (LVALU.IVAL <= 0 || LVALU.IVAL > STRGLGTH) {
                                 ERROR(203);
@@ -137,7 +137,7 @@ static void SIMPLETYPE(SETOFSYS *FSYS, STP *FSP, ADDRRANGE *FSIZE)
                             INSYMBOL();
                             LSP = NEWTYPE0();        /* NEW(LSP, LONGINT) */
                             *LSP = *LONGINTPTR;
-                            CONSTANT(SETADD(&s, FSYS, RBRACK, -1), &LSP1, &LVALU);
+                            CONSTANT(SETADD(&s, FSYS, RBRACK, SETEND), &LSP1, &LVALU);
                             if (LSP1 == INTPTR) {
                                 if (LVALU.IVAL <= 0 || LVALU.IVAL > MAXDEC)
                                     ERROR(203);
@@ -161,7 +161,7 @@ static void SIMPLETYPE(SETOFSYS *FSYS, STP *FSP, ADDRRANGE *FSIZE)
             } else {                            /* (SY = IDENT) */
                 LSP = NEWTYPE(SR);                /* NEW(LSP, SUBRANGE) */
                 LSP->FORM = SUBRANGE;
-                CONSTANT(SETADD(&s, FSYS, COLON, -1), &LSP1, &LVALU);
+                CONSTANT(SETADD(&s, FSYS, COLON, SETEND), &LSP1, &LVALU);
                 if (STRGTYPE(LSP1)) {
                     ERROR(148);
                     LSP1 = NULL;
@@ -305,7 +305,7 @@ static void VARIANTLIST(struct FLCTX *f)
         f->LCP->U.F.FISPACKD = FALSE;
         GOTTAGNAME = FALSE;
         PRTERR = FALSE;
-        SEARCHID(SETOF(&s, TYPES, -1), &f->LCP1);
+        SEARCHID(SETOF(&s, TYPES, SETEND), &f->LCP1);
         PRTERR = TRUE;
         if (f->LCP1 == NULL) {
             GOTTAGNAME = TRUE;
@@ -318,7 +318,7 @@ static void VARIANTLIST(struct FLCTX *f)
                 ERROR(5);
         }
         if (SY == IDENT) {
-            SEARCHID(SETOF(&s, TYPES, -1), &f->LCP1);
+            SEARCHID(SETOF(&s, TYPES, SETEND), &f->LCP1);
             f->LSP1 = f->LCP1->IDTYPE;
             if (f->LSP1 != NULL) {
                 if (f->LSP1->FORM <= SUBRANGE) {
@@ -334,11 +334,11 @@ static void VARIANTLIST(struct FLCTX *f)
             INSYMBOL();
         } else {
             ERROR(2);
-            SKIP(SETADD(&s, f->FSYS, OFSY, LPARENT, -1));
+            SKIP(SETADD(&s, f->FSYS, OFSY, LPARENT, SETEND));
         }
     } else {
         ERROR(2);
-        SKIP(SETADD(&s, f->FSYS, OFSY, LPARENT, -1));
+        SKIP(SETADD(&s, f->FSYS, OFSY, LPARENT, SETEND));
     }
     f->LSP->SIZE = t->DISPL + (t->NEXTBIT > 0);
     if (SY == OFSY)
@@ -353,7 +353,7 @@ static void VARIANTLIST(struct FLCTX *f)
     do {
         f->LSP2 = NULL;
         do {
-            CONSTANT(SETADD(&s, f->FSYS, COMMA, COLON, LPARENT, -1), &f->LSP3, &f->LVALU);
+            CONSTANT(SETADD(&s, f->FSYS, COMMA, COLON, LPARENT, SETEND), &f->LSP3, &f->LVALU);
             if (f->LSP->U.TF.TAGFIELDP != NULL)
                 if (!COMPTYPES(f->LSP->U.TF.TAGFIELDP->IDTYPE, f->LSP3))
                     ERROR(111);
@@ -379,7 +379,7 @@ static void VARIANTLIST(struct FLCTX *f)
         if (SY == RPARENT)
             f->LSP2 = NULL;
         else
-            FIELDLIST(t, SETADD(&s, f->FSYS, RPARENT, SEMICOLON, -1), &f->LSP2);
+            FIELDLIST(t, SETADD(&s, f->FSYS, RPARENT, SEMICOLON, SETEND), &f->LSP2);
         if (t->DISPL > f->MAXSIZE) {
             f->MAXSIZE = t->DISPL;
             f->MAXBIT = t->NEXTBIT;
@@ -393,7 +393,7 @@ static void VARIANTLIST(struct FLCTX *f)
         }
         if (SY == RPARENT) {
             INSYMBOL();
-            if (!IN(SY, SETADD(&u, f->FSYS, SEMICOLON, -1))) {
+            if (!IN(SY, SETADD(&u, f->FSYS, SEMICOLON, SETEND))) {
                 ERROR(6);
                 SKIP(&u);
             }
@@ -424,7 +424,7 @@ static void FIELDLIST(struct TYPCTX *t, SETOFSYS *FSYS, STP *FRECVAR)
     f->LAST = NULL;
     if (!(SY == IDENT || SY == CASESY)) {
         ERROR(19);
-        SKIP(SETADD(&s, FSYS, IDENT, CASESY, -1));
+        SKIP(SETADD(&s, FSYS, IDENT, CASESY, SETEND));
     }
     while (SY == IDENT) {
         f->NXT = f->NXT1;
@@ -443,7 +443,7 @@ static void FIELDLIST(struct TYPCTX *t, SETOFSYS *FSYS, STP *FRECVAR)
                 ERROR(2);
             if (!(SY == COMMA || SY == COLON)) {
                 ERROR(6);
-                SKIP(SETADD(&s, FSYS, COMMA, COLON, SEMICOLON, CASESY, -1));
+                SKIP(SETADD(&s, FSYS, COMMA, COLON, SEMICOLON, CASESY, SETEND));
             }
             TEST = SY != COMMA;
             if (!TEST)
@@ -453,7 +453,7 @@ static void FIELDLIST(struct TYPCTX *t, SETOFSYS *FSYS, STP *FRECVAR)
             INSYMBOL();
         else
             ERROR(5);
-        TYP(t->d, SETADD(&s, FSYS, CASESY, SEMICOLON, -1), &f->LSP, &f->LSIZE);
+        TYP(t->d, SETADD(&s, FSYS, CASESY, SEMICOLON, SETEND), &f->LSP, &f->LSIZE);
         if (f->LSP != NULL)
             if (f->LSP->FORM == FILES)
                 ERROR(108);
@@ -470,7 +470,7 @@ static void FIELDLIST(struct TYPCTX *t, SETOFSYS *FSYS, STP *FRECVAR)
             INSYMBOL();
             if (!(SY == IDENT || SY == ENDSY || SY == CASESY)) {   /* (<<<< SMF 2-28-78) */
                 ERROR(19);
-                SKIP(SETADD(&s, FSYS, IDENT, CASESY, -1));
+                SKIP(SETADD(&s, FSYS, IDENT, CASESY, SETEND));
             }
         }
     }
@@ -499,7 +499,7 @@ static void POINTERTYPE(struct TYPCTX *t)
     INSYMBOL();
     if (SY == IDENT) {
         PRTERR = FALSE;
-        SEARCHID(SETOF(&s, TYPES, -1), &t->LCP);
+        SEARCHID(SETOF(&s, TYPES, SETEND), &t->LCP);
         PRTERR = TRUE;
         if (t->LCP == NULL) {                   /* a forward referenced type id */
             t->LCP = NEWID0();                   /* NEW(LCP, TYPES) */
@@ -563,7 +563,7 @@ static void TYP(struct DECCTX *d, SETOFSYS *FSYS, STP *FSP, ADDRRANGE *FSIZE)
                     t->LSP->U.AR.AISPACKD = FALSE;
                     t->LSP->FORM = ARRAYS;
                     t->LSP1 = t->LSP;
-                    SIMPLETYPE(SETADD(&s, FSYS, COMMA, RBRACK, OFSY, -1), &t->LSP2, &t->LSIZE);
+                    SIMPLETYPE(SETADD(&s, FSYS, COMMA, RBRACK, OFSY, SETEND), &t->LSP2, &t->LSIZE);
                     t->LSP1->SIZE = t->LSIZE;
                     if (t->LSP2 != NULL) {
                         if (t->LSP2->FORM <= SUBRANGE) {
@@ -634,8 +634,8 @@ static void TYP(struct DECCTX *d, SETOFSYS *FSYS, STP *FSP, ADDRRANGE *FSIZE)
                 t->NEXTBIT = 0;
                 {
                     SETS a, b;
-                    SETOF(&a, SEMICOLON, -1);
-                    FIELDLIST(t, SETADD(&b, SETMINUS(&s, FSYS, &a), ENDSY, -1), &t->LSP1);
+                    SETOF(&a, SEMICOLON, SETEND);
+                    FIELDLIST(t, SETADD(&b, SETMINUS(&s, FSYS, &a), ENDSY, SETEND), &t->LSP1);
                 }
                 t->DISPL = t->DISPL + (t->NEXTBIT > 0);
                 t->LSP = NEWTYPE(RE);             /* NEW(LSP, RECORDS) */
@@ -878,7 +878,7 @@ static void USESDECLARATION(struct DECCTX *d, BOOLEAN MAGIC)
                     LCP->U.SEGID = SEG;
                 ENTERID(LCP);
                 USINGLIST = LCP;
-                DECLARATIONPART(SETADD(&s, d->FSYS, ENDSY, -1));
+                DECLARATIONPART(SETADD(&s, d->FSYS, ENDSY, SETEND));
                 if (NEXTPROC == 1)              /* no procedures declared */
                     LCP->U.SEGID = -1;
                 SYMBLK = 9999;                  /* (force a return to the source file) */
@@ -947,7 +947,7 @@ static void LABELDECLARATION(struct DECCTX *d)
             INSYMBOL();
         } else
             ERROR(15);
-        if (!IN(SY, SETADD(&s, d->FSYS, COMMA, SEMICOLON, -1))) {
+        if (!IN(SY, SETADD(&s, d->FSYS, COMMA, SEMICOLON, SETEND))) {
             ERROR(6);
             SKIP(&s);
         }
@@ -969,7 +969,7 @@ static void CONSTDECLARATION(struct DECCTX *d)
     SETS s;
     if (SY != IDENT) {
         ERROR(2);
-        SKIP(SETADD(&s, d->FSYS, IDENT, -1));
+        SKIP(SETADD(&s, d->FSYS, IDENT, SETEND));
     }
     while (SY == IDENT) {
         LCP = NEWID(VALUES);                          /* NEW(LCP, KONST) */
@@ -982,13 +982,13 @@ static void CONSTDECLARATION(struct DECCTX *d)
             INSYMBOL();
         else
             ERROR(16);
-        CONSTANT(SETADD(&s, d->FSYS, SEMICOLON, -1), &LSP, &LVALU);
+        CONSTANT(SETADD(&s, d->FSYS, SEMICOLON, SETEND), &LSP, &LVALU);
         ENTERID(LCP);
         LCP->IDTYPE = LSP;
         LCP->U.VALUES = LVALU;
         if (SY == SEMICOLON) {
             INSYMBOL();
-            if (!IN(SY, SETADD(&s, d->FSYS, IDENT, -1))) {
+            if (!IN(SY, SETADD(&s, d->FSYS, IDENT, SETEND))) {
                 ERROR(6);
                 SKIP(&s);
             }
@@ -1006,7 +1006,7 @@ static void TYPEDECLARATION(struct DECCTX *d)
     LCP2 = NULL;
     if (SY != IDENT) {
         ERROR(2);
-        SKIP(SETADD(&s, d->FSYS, IDENT, -1));
+        SKIP(SETADD(&s, d->FSYS, IDENT, SETEND));
     }
     while (SY == IDENT) {
         LCP = NEWID0();                          /* NEW(LCP, TYPES) */
@@ -1018,7 +1018,7 @@ static void TYPEDECLARATION(struct DECCTX *d)
             INSYMBOL();
         else
             ERROR(16);
-        TYP(d, SETADD(&s, d->FSYS, SEMICOLON, -1), &LSP, &LSIZE);
+        TYP(d, SETADD(&s, d->FSYS, SEMICOLON, SETEND), &LSP, &LSIZE);
         ENTERID(LCP);
         LCP->IDTYPE = LSP;
         LCP1 = FWPTR;
@@ -1035,7 +1035,7 @@ static void TYPEDECLARATION(struct DECCTX *d)
         }
         if (SY == SEMICOLON) {
             INSYMBOL();
-            if (!IN(SY, SETADD(&s, d->FSYS, IDENT, -1))) {
+            if (!IN(SY, SETADD(&s, d->FSYS, IDENT, SETEND))) {
                 ERROR(6);
                 SKIP(&s);
             }
@@ -1075,9 +1075,9 @@ static void VARDECLARATION(struct DECCTX *d)
                 INSYMBOL();
             } else
                 ERROR(2);
-            if (!IN(SY, SETPLUS(&u, SETADD(&s, d->FSYS, COMMA, COLON, -1), &TYPEDELS))) {
+            if (!IN(SY, SETPLUS(&u, SETADD(&s, d->FSYS, COMMA, COLON, SETEND), &TYPEDELS))) {
                 ERROR(6);
-                SKIP(SETPLUS(&u, SETADD(&s, d->FSYS, COMMA, COLON, SEMICOLON, -1), &TYPEDELS));
+                SKIP(SETPLUS(&u, SETADD(&s, d->FSYS, COMMA, COLON, SEMICOLON, SETEND), &TYPEDELS));
             }
             TEST = SY != COMMA;
             if (!TEST)
@@ -1088,7 +1088,7 @@ static void VARDECLARATION(struct DECCTX *d)
         else
             ERROR(5);
         IDLIST = NXT;
-        TYP(d, SETPLUS(&u, SETADD(&s, d->FSYS, SEMICOLON, -1), &TYPEDELS), &LSP, &LSIZE);
+        TYP(d, SETPLUS(&u, SETADD(&s, d->FSYS, SEMICOLON, SETEND), &TYPEDELS), &LSP, &LSIZE);
         while (NXT != NULL) {
             CTP W = NXT;                        /* WITH NXT^ DO */
             W->IDTYPE = LSP;
@@ -1104,7 +1104,7 @@ static void VARDECLARATION(struct DECCTX *d)
         }
         if (SY == SEMICOLON) {
             INSYMBOL();
-            if (!IN(SY, SETADD(&s, d->FSYS, IDENT, -1))) {
+            if (!IN(SY, SETADD(&s, d->FSYS, IDENT, SETEND))) {
                 ERROR(6);
                 SKIP(&s);
             }
@@ -1135,9 +1135,9 @@ static void PARAMETERLIST(struct PDCTX *p, SETOFSYS *FSY, CTP *FPAR, CTP FCP)
     SETS s, u;
     LCP1 = NULL;
     LLC = LC;
-    if (!IN(SY, SETADD(&s, FSY, LPARENT, -1))) {
+    if (!IN(SY, SETADD(&s, FSY, LPARENT, SETEND))) {
         ERROR(7);
-        SKIP(SETADD(&u, SETPLUS(&s, FSYS, FSY), LPARENT, -1));
+        SKIP(SETADD(&u, SETPLUS(&s, FSYS, FSY), LPARENT, SETEND));
     }
     if (SY == LPARENT) {
         if (p->FORW)
@@ -1145,7 +1145,7 @@ static void PARAMETERLIST(struct PDCTX *p, SETOFSYS *FSY, CTP *FPAR, CTP FCP)
         INSYMBOL();
         if (!(SY == IDENT || SY == VARSY)) {
             ERROR(7);
-            SKIP(SETADD(&s, FSYS, IDENT, RPARENT, -1));
+            SKIP(SETADD(&s, FSYS, IDENT, RPARENT, SETEND));
         }
         while (SY == IDENT || SY == VARSY) {
             if (SY == VARSY) {
@@ -1173,9 +1173,9 @@ static void PARAMETERLIST(struct PDCTX *p, SETOFSYS *FSY, CTP *FPAR, CTP FCP)
                     COUNT = COUNT + 1;
                     INSYMBOL();
                 }
-                if (!IN(SY, SETADD(&s, FSYS, COMMA, SEMICOLON, COLON, -1))) {
+                if (!IN(SY, SETADD(&s, FSYS, COMMA, SEMICOLON, COLON, SETEND))) {
                     ERROR(7);
-                    SKIP(SETADD(&s, FSYS, COMMA, SEMICOLON, RPARENT, COLON, -1));
+                    SKIP(SETADD(&s, FSYS, COMMA, SEMICOLON, RPARENT, COLON, SETEND));
                 }
                 TEST = SY != COMMA;
                 if (!TEST)
@@ -1185,7 +1185,7 @@ static void PARAMETERLIST(struct PDCTX *p, SETOFSYS *FSY, CTP *FPAR, CTP FCP)
             if (SY == COLON) {
                 INSYMBOL();
                 if (SY == IDENT) {
-                    SEARCHID(SETOF(&s, TYPES, -1), &LCP);
+                    SEARCHID(SETOF(&s, TYPES, SETEND), &LCP);
                     INSYMBOL();
                     LSP = LCP->IDTYPE;
                     LEN = PTRSIZE;
@@ -1203,7 +1203,7 @@ static void PARAMETERLIST(struct PDCTX *p, SETOFSYS *FSY, CTP *FPAR, CTP FCP)
                 p->EXTONLY = TRUE;
             else
                 ERROR(5);
-            if (!IN(SY, SETADD(&s, FSYS, SEMICOLON, RPARENT, -1))) {
+            if (!IN(SY, SETADD(&s, FSYS, SEMICOLON, RPARENT, SETEND))) {
                 ERROR(7);
                 SKIP(&s);
             }
@@ -1220,9 +1220,9 @@ static void PARAMETERLIST(struct PDCTX *p, SETOFSYS *FSY, CTP *FPAR, CTP FCP)
             }
             if (SY == SEMICOLON) {
                 INSYMBOL();
-                if (!IN(SY, SETADD(&s, FSYS, IDENT, VARSY, -1))) {
+                if (!IN(SY, SETADD(&s, FSYS, IDENT, VARSY, SETEND))) {
                     ERROR(7);
-                    SKIP(SETADD(&s, FSYS, IDENT, RPARENT, -1));
+                    SKIP(SETADD(&s, FSYS, IDENT, RPARENT, SETEND));
                 }
             }
         }
@@ -1402,11 +1402,11 @@ static void PROCDECLARATION(struct DECCTX *d, SYMBOL FSY, BOOLEAN SEGDEC)
     } else
         ERROR(250);
     if (FSY == PROCSY) {
-        PARAMETERLIST(p, SETOF(&s, SEMICOLON, -1), &LCP1, LCP);
+        PARAMETERLIST(p, SETOF(&s, SEMICOLON, SETEND), &LCP1, LCP);
         if (!p->FORW)
             LCP->NEXT = LCP1;
     } else {
-        PARAMETERLIST(p, SETOF(&s, SEMICOLON, COLON, -1), &LCP1, LCP);
+        PARAMETERLIST(p, SETOF(&s, SEMICOLON, COLON, SETEND), &LCP1, LCP);
         if (!p->FORW)
             LCP->NEXT = LCP1;
         if (SY == COLON) {
@@ -1414,7 +1414,7 @@ static void PROCDECLARATION(struct DECCTX *d, SYMBOL FSY, BOOLEAN SEGDEC)
             if (SY == IDENT) {
                 if (p->FORW)
                     ERROR(122);
-                SEARCHID(SETOF(&s, TYPES, -1), &LCP1);
+                SEARCHID(SETOF(&s, TYPES, SETEND), &LCP1);
                 LSP = LCP1->IDTYPE;
                 LCP->IDTYPE = LSP;
                 if (LSP != NULL)
@@ -1425,7 +1425,7 @@ static void PROCDECLARATION(struct DECCTX *d, SYMBOL FSY, BOOLEAN SEGDEC)
                 INSYMBOL();
             } else {
                 ERROR(2);
-                SKIP(SETADD(&s, FSYS, SEMICOLON, -1));
+                SKIP(SETADD(&s, FSYS, SEMICOLON, SETEND));
             }
         } else if (!p->FORW)
             ERROR(123);
@@ -1539,7 +1539,7 @@ void DECLARATIONPART(SETOFSYS *FSYS)
         if (SY == LABELSY) {
             if (INMODULE && ININTERFACE) {
                 ERROR(186);
-                SKIP(SETMINUS(&s, FSYS, SETOF(&u, LABELSY, -1)));
+                SKIP(SETMINUS(&s, FSYS, SETOF(&u, LABELSY, SETEND)));
             } else
                 INSYMBOL();
             LABELDECLARATION(d);
@@ -1580,8 +1580,8 @@ void DECLARATIONPART(SETOFSYS *FSYS)
                 && !(SY == SEPARATSY || SY == UNITSY))
                 if (!(INCLUDING || d->NOTDONE) || !IN(SY, &BLOCKBEGSYS)) {
                     ERROR(18);
-                    SKIP(SETMINUS(&s, FSYS, SETOF(&u, UNITSY, INTERSY, -1)));
+                    SKIP(SETMINUS(&s, FSYS, SETOF(&u, UNITSY, INTERSY, SETEND)));
                 }
-    } while (!IN(SY, SETADD(&w, &STATBEGSYS, SEPARATSY, UNITSY, IMPLESY, ENDSY, -1)));
+    } while (!IN(SY, SETADD(&w, &STATBEGSYS, SEPARATSY, UNITSY, IMPLESY, ENDSY, SETEND)));
     NEWBLOCK = FALSE;
 }

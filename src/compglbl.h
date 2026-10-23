@@ -463,7 +463,8 @@ void FILLCHAR(void *dst, int n, int ch);
 #endif
 
 /* ---- sets (sets.c) ---- */
-SETS *SETOF(SETS *s, int x, ...);           /* s := [x, ...] (the list ends with -1) */
+#define SETEND 127                          /* (ends the list: one byte of P-code, as -1 is not) */
+SETS *SETOF(SETS *s, int x, ...);           /* s := [x, ...] (the list ends with SETEND) */
 SETS *SETPLUS(SETS *s, SETS *a, SETS *b);   /* s := a + b */
 SETS *SETMINUS(SETS *s, SETS *a, SETS *b);  /* s := a - b */
 SETS *SETADD(SETS *s, SETS *a, int x, ...); /* s := a + [x, ...] */

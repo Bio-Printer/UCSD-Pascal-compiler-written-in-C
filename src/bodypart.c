@@ -171,6 +171,43 @@ static void GENNR(NONRESIDENT EXTPROC)
         GEN1(79, PFNUMOF[EXTPROC]);             /* CGP */
 }
 
+/* (repeated in the Pascal; one call each here, for shorter code) */
+static void GENCSP(INTEGER N)                   /* GEN1(30(*CSP*), N) */
+{
+    GEN1(30, N);
+}
+
+static void GENSYS(INTEGER N)                   /* GEN2(77(*CXP*), 0(*SYS*), N) */
+{
+    GEN2(77, 0, N);
+}
+
+static void GENIOC(void)                        /* IF IOCHECK THEN GEN1(30(*CSP*), 0(*IOC*)) */
+{
+    if (IOCHECK)
+        GEN1(30, 0);
+}
+
+static void NEEDCOMMA(void)                     /* IF SY = COMMA THEN INSYMBOL ELSE ERROR(20) */
+{
+    if (SY == COMMA)
+        INSYMBOL();
+    else
+        ERROR(20);
+}
+
+static void NEEDINT(void)                       /* IF GATTR.TYPTR <> INTPTR THEN ERROR(125) */
+{
+    if (GATTR.TYPTR != INTPTR)
+        ERROR(125);
+}
+
+static void CHECKINT(void)                      /* ... when GATTR.TYPTR <> NIL */
+{
+    if (GATTR.TYPTR != NULL)
+        NEEDINT();
+}
+
 static void GENJMP(OPRANGE FOP, LBP FLBP)
 {
     INTEGER DISP;
@@ -406,6 +443,7 @@ static void STRGTOPA(ADDRRANGE FIC)
 }
 
 static void EXPRESSION(SETOFSYS *FSYS);
+static void LOADEXPR(SETOFSYS *FSYS);
 
 /* a selected type that is more than a word is reached through its address */
 static void MULTIWORD(void)
@@ -494,8 +532,7 @@ static void SELECTOR(SETOFSYS *FSYS, CTP FCP)
                     }
                 LOADADDRESS();
                 INSYMBOL();
-                EXPRESSION(SETADD(&u, FSYS, COMMA, RBRACK, -1));
-                LOAD();
+                LOADEXPR(SETADD(&u, FSYS, COMMA, RBRACK, SETEND));
                 if (GATTR.TYPTR != NULL)
                     if (GATTR.TYPTR->FORM != SCALAR)
                         ERROR(113);
@@ -630,13 +667,25 @@ static void VARIABLE(SETOFSYS *FSYS)
     CTP LCP;
     SETS s;
     if (SY == IDENT) {
-        SEARCHID(SETADD(&s, &VARS, FIELD, -1), &LCP);
+        SEARCHID(SETADD(&s, &VARS, FIELD, SETEND), &LCP);
         INSYMBOL();
     } else {
         ERROR(2);
         LCP = UVARPTR;
     }
     SELECTOR(FSYS, LCP);
+}
+
+static void LOADEXPR(SETOFSYS *FSYS)           /* EXPRESSION(FSYS); LOAD */
+{
+    EXPRESSION(FSYS);
+    LOAD();
+}
+
+static void VARADDR(SETOFSYS *FSYS)             /* VARIABLE(FSYS); LOADADDRESS */
+{
+    VARIABLE(FSYS);
+    LOADADDRESS();
 }
 
 static void STRGVAR(SETOFSYS *FSYS, BOOLEAN MUSTBEVAR)
@@ -675,8 +724,7 @@ static void NEWSTMT(struct CALLCTX *c)
     ADDRRANGE LSIZE;
     VALU LVAL;
     SETS s;
-    VARIABLE(SETADD(&s, c->FSYS, COMMA, RPARENT, -1));
-    LOADADDRESS();
+    VARADDR(SETADD(&s, c->FSYS, COMMA, RPARENT, SETEND));
     LSP = NULL;
     VARTS = 0;
     LSIZE = 0;
@@ -718,37 +766,29 @@ static void NEWSTMT(struct CALLCTX *c)
     L1:;
     }
     GENLDC(LSIZE);
-    GEN1(30, 1);                                /* CSP NEW */
+    GENCSP(1);                                  /* CSP NEW */
 }
 
 static void MOVE(struct CALLCTX *c)
 {
     SETS s;
-    VARIABLE(SETADD(&s, c->FSYS, COMMA, -1));
+    VARIABLE(SETADD(&s, c->FSYS, COMMA, SETEND));
     BYTEADDRESS();
-    if (SY == COMMA)
-        INSYMBOL();
-    else
-        ERROR(20);
+    NEEDCOMMA();
     if (c->LKEY == 27) {
-        EXPRESSION(&s);
-        LOAD();
+        LOADEXPR(&s);
     } else {
         VARIABLE(&s);
         BYTEADDRESS();
     }
-    if (SY == COMMA)
-        INSYMBOL();
-    else
-        ERROR(20);
-    EXPRESSION(SETADD(&s, c->FSYS, RPARENT, -1));
-    LOAD();
+    NEEDCOMMA();
+    LOADEXPR(SETADD(&s, c->FSYS, RPARENT, SETEND));
     if (c->LKEY == 27)
-        GEN1(30, 10);                           /* CSP FLC */
+        GENCSP(10);                             /* CSP FLC */
     else if (c->LKEY == 21)
-        GEN1(30, 2);                            /* CSP MVL */
+        GENCSP(2);                              /* CSP MVL */
     else
-        GEN1(30, 3);                            /* CSP MVR */
+        GENCSP(3);                              /* CSP MVR */
 }
 
 static void EXITSTMT(void)                      /* EXIT */
@@ -756,7 +796,7 @@ static void EXITSTMT(void)                      /* EXIT */
     CTP LCP;
     SETS s;
     if (SY == IDENT) {
-        SEARCHID(SETOF(&s, PROC, FUNC, -1), &LCP);
+        SEARCHID(SETOF(&s, PROC, FUNC, SETEND), &LCP);
         INSYMBOL();
     } else if (SY == PROGSY) {
         LCP = OUTERBLOCK;
@@ -776,52 +816,39 @@ static void EXITSTMT(void)                      /* EXIT */
             ERROR(125);
     } else
         ERROR(125);
-    GEN1(30, 4);                                /* CSP XIT */
+    GENCSP(4);                                  /* CSP XIT */
 }
 
 static void UNITIO(struct CALLCTX *c)
 {
     SETS s;
-    if (GATTR.TYPTR != INTPTR)
-        ERROR(125);
-    if (SY == COMMA)
-        INSYMBOL();
-    else
-        ERROR(20);
-    VARIABLE(SETADD(&s, c->FSYS, COMMA, -1));
+    NEEDINT();
+    NEEDCOMMA();
+    VARIABLE(SETADD(&s, c->FSYS, COMMA, SETEND));
     BYTEADDRESS();
-    if (SY == COMMA)
-        INSYMBOL();
-    else
-        ERROR(20);
-    EXPRESSION(SETADD(&s, c->FSYS, COMMA, RPARENT, -1));
-    LOAD();
-    if (GATTR.TYPTR != INTPTR)
-        ERROR(125);
+    NEEDCOMMA();
+    LOADEXPR(SETADD(&s, c->FSYS, COMMA, RPARENT, SETEND));
+    NEEDINT();
     if (SY == COMMA) {
         INSYMBOL();
         if (SY == COMMA)
             GENLDC(0);
         else {
-            EXPRESSION(&s);
-            LOAD();
-            if (GATTR.TYPTR != INTPTR)
-                ERROR(125);
+            LOADEXPR(&s);
+            NEEDINT();
         }
     } else
         GENLDC(0);
     if (SY == COMMA) {
         INSYMBOL();
-        EXPRESSION(SETADD(&s, c->FSYS, RPARENT, -1));
-        LOAD();
-        if (GATTR.TYPTR != INTPTR)
-            ERROR(125);
+        LOADEXPR(SETADD(&s, c->FSYS, RPARENT, SETEND));
+        NEEDINT();
     } else
         GENLDC(0);
     if (c->LKEY == 13)
-        GEN1(30, 5);                            /* CSP URD */
+        GENCSP(5);                              /* CSP URD */
     else
-        GEN1(30, 6);                            /* CSP UWT */
+        GENCSP(6);                              /* CSP UWT */
 }
 
 static void CONCAT(struct CALLCTX *c)
@@ -836,13 +863,13 @@ static void CONCAT(struct CALLCTX *c)
     GEN2(56, 0, LLC);                           /* STR */
     GEN2(50, 0, LLC);                           /* LDA */
     do {
-        STRGVAR(SETADD(&s, c->FSYS, COMMA, RPARENT, -1), FALSE);
+        STRGVAR(SETADD(&s, c->FSYS, COMMA, RPARENT, SETEND), FALSE);
         TEMPLGTH = TEMPLGTH + GATTR.TYPTR->U.AR.MAXLENG;
         if (TEMPLGTH < STRGLGTH)
             GENLDC(TEMPLGTH);
         else
             GENLDC(STRGLGTH);
-        GEN2(77, 0, 23);                        /* CXP SYS SCONCAT */
+        GENSYS(23);                             /* CXP SYS SCONCAT */
         GEN2(50, 0, LLC);                       /* LDA */
         TEST = SY != COMMA;
         if (!TEST)
@@ -870,32 +897,20 @@ static void COPYDELETE(struct CALLCTX *c)
         LC = LC + STRGLGTH / CHRSPERWD + 1;
     }
     if (c->LKEY != 43) {
-        STRGVAR(SETADD(&s, c->FSYS, COMMA, -1), c->LKEY == 18);
+        STRGVAR(SETADD(&s, c->FSYS, COMMA, SETEND), c->LKEY == 18);
         if (c->LKEY == 19) {
             LSP = GATTR.TYPTR;
             GEN2(50, 0, LLC);                   /* LDA */
         }
-        if (SY == COMMA)
-            INSYMBOL();
-        else
-            ERROR(20);
+        NEEDCOMMA();
     }
-    EXPRESSION(SETADD(&s, c->FSYS, COMMA, -1));
-    LOAD();
-    if (GATTR.TYPTR != NULL)
-        if (GATTR.TYPTR != INTPTR)
-            ERROR(125);
-    if (SY == COMMA)
-        INSYMBOL();
-    else
-        ERROR(20);
-    EXPRESSION(SETADD(&s, c->FSYS, RPARENT, -1));
-    LOAD();
-    if (GATTR.TYPTR != NULL)
-        if (GATTR.TYPTR != INTPTR)
-            ERROR(125);
+    LOADEXPR(SETADD(&s, c->FSYS, COMMA, SETEND));
+    CHECKINT();
+    NEEDCOMMA();
+    LOADEXPR(SETADD(&s, c->FSYS, RPARENT, SETEND));
+    CHECKINT();
     if (c->LKEY == 19) {
-        GEN2(77, 0, 25);                        /* CXP SYS SCOPY */
+        GENSYS(25);                             /* CXP SYS SCOPY */
         GEN2(50, 0, LLC);                       /* LDA */
         if (LSP->U.AR.MAXLENG < STRGLGTH)
             LC = LLC + DIV(LSP->U.AR.MAXLENG, CHRSPERWD) + 1;
@@ -904,9 +919,9 @@ static void COPYDELETE(struct CALLCTX *c)
         LC = LLC;
         GATTR.TYPTR = LSP;
     } else if (c->LKEY == 43)
-        GEN2(77, 0, 29);                        /* CXP SYS GOTOXY */
+        GENSYS(29);                             /* CXP SYS GOTOXY */
     else
-        GEN2(77, 0, 26);                        /* CXP SYS SDELETE */
+        GENSYS(26);                             /* CXP SYS SDELETE */
 }
 
 static void STR(struct CALLCTX *c)
@@ -920,11 +935,8 @@ static void STR(struct CALLCTX *c)
         GATTR.TYPTR = LONGINTPTR;
     } else
         ERROR(125);
-    if (SY == COMMA)
-        INSYMBOL();
-    else
-        ERROR(20);
-    STRGVAR(SETADD(&s, c->FSYS, RPARENT, -1), TRUE);
+    NEEDCOMMA();
+    STRGVAR(SETADD(&s, c->FSYS, RPARENT, SETEND), TRUE);
     if (STRGTYPE(GATTR.TYPTR)) {
         GENLDC(GATTR.TYPTR->U.AR.MAXLENG);
         GENLDC(12);                             /* DSTR */
@@ -936,8 +948,7 @@ static void STR(struct CALLCTX *c)
 static void CLOSESTMT(struct CALLCTX *c)        /* CLOSE */
 {
     SETS s;
-    VARIABLE(SETADD(&s, c->FSYS, COMMA, RPARENT, -1));
-    LOADADDRESS();
+    VARADDR(SETADD(&s, c->FSYS, COMMA, RPARENT, SETEND));
     if (GATTR.TYPTR != NULL)
         if (GATTR.TYPTR->FORM != FILES)
             ERROR(125);
@@ -959,16 +970,14 @@ static void CLOSESTMT(struct CALLCTX *c)        /* CLOSE */
             ERROR(2);
     } else
         GENLDC(0);
-    GEN2(77, 0, 6);                             /* CXP SYS FCLOSE */
-    if (IOCHECK)
-        GEN1(30, 0);                            /* CSP IOC */
+    GENSYS(6);                                  /* CXP SYS FCLOSE */
+    GENIOC();
 }
 
 static void GETPUTETC(struct CALLCTX *c)
 {
     SETS s;
-    VARIABLE(SETADD(&s, c->FSYS, COMMA, RPARENT, -1));
-    LOADADDRESS();
+    VARADDR(SETADD(&s, c->FSYS, COMMA, RPARENT, SETEND));
     if (GATTR.TYPTR != NULL) {
         if (GATTR.TYPTR->FORM != FILES)
             ERROR(125);
@@ -979,19 +988,17 @@ static void GETPUTETC(struct CALLCTX *c)
     case 32:
         if (SY == COMMA) {
             INSYMBOL();
-            EXPRESSION(SETADD(&s, c->FSYS, RPARENT, -1));
-            LOAD();
-            if (GATTR.TYPTR != INTPTR)
-                ERROR(125);
+            LOADEXPR(SETADD(&s, c->FSYS, RPARENT, SETEND));
+            NEEDINT();
         } else
             ERROR(125);
         GENNR(SEEK);
         break;
     case 34:
-        GEN2(77, 0, 7);                         /* CXP SYS FGET */
+        GENSYS(7);                              /* CXP SYS FGET */
         break;
     case 35:
-        GEN2(77, 0, 8);                         /* CXP SYS FPUT */
+        GENSYS(8);                              /* CXP SYS FPUT */
         break;
     case 40:
         if (GATTR.TYPTR != NULL)
@@ -999,23 +1006,17 @@ static void GETPUTETC(struct CALLCTX *c)
                 ERROR(399);
         GENLDC(12);
         GENLDC(0);
-        GEN2(77, 0, 17);                        /* CXP SYS WRC */
+        GENSYS(17);                             /* CXP SYS WRC */
         break;
     }
-    if (IOCHECK)
-        GEN1(30, 0);                            /* CSP IOC */
+    GENIOC();
 }
 
 static void SCANSTMT(struct CALLCTX *c)         /* SCAN */
 {
     SETS s;
-    if (GATTR.TYPTR != NULL)
-        if (GATTR.TYPTR != INTPTR)
-            ERROR(125);
-    if (SY == COMMA)
-        INSYMBOL();
-    else
-        ERROR(20);
+    CHECKINT();
+    NEEDCOMMA();
     if (SY == RELOP) {
         if (OP == EQOP)
             GENLDC(0);
@@ -1026,58 +1027,42 @@ static void SCANSTMT(struct CALLCTX *c)         /* SCAN */
         INSYMBOL();
     } else
         ERROR(125);
-    EXPRESSION(SETADD(&s, c->FSYS, COMMA, -1));
-    LOAD();
+    LOADEXPR(SETADD(&s, c->FSYS, COMMA, SETEND));
     if (GATTR.TYPTR != NULL)
         if (GATTR.TYPTR != CHARPTR)
             ERROR(125);
-    if (SY == COMMA)
-        INSYMBOL();
-    else
-        ERROR(20);
-    VARIABLE(SETADD(&s, c->FSYS, COMMA, RPARENT, -1));
+    NEEDCOMMA();
+    VARIABLE(SETADD(&s, c->FSYS, COMMA, RPARENT, SETEND));
     BYTEADDRESS();
     if (SY == COMMA) {
         INSYMBOL();
-        EXPRESSION(SETADD(&s, c->FSYS, RPARENT, -1));
-        LOAD();
+        LOADEXPR(SETADD(&s, c->FSYS, RPARENT, SETEND));
     } else
         GENLDC(0);
-    GEN1(30, 11);                               /* CSP SCN */
+    GENCSP(11);                                 /* CSP SCN */
     GATTR.TYPTR = INTPTR;
 }
 
 static void BLOCKIO(struct CALLCTX *c)
 {
     SETS s;
-    VARIABLE(SETADD(&s, c->FSYS, COMMA, -1));
-    LOADADDRESS();
+    VARADDR(SETADD(&s, c->FSYS, COMMA, SETEND));
     if (GATTR.TYPTR != NULL) {
         if (GATTR.TYPTR->FORM != FILES)
             ERROR(125);
         else if (GATTR.TYPTR->U.FILTYPE != NULL)
             ERROR(399);
     }
-    if (SY == COMMA)
-        INSYMBOL();
-    else
-        ERROR(20);
+    NEEDCOMMA();
     VARIABLE(&s);
     BYTEADDRESS();
-    if (SY == COMMA)
-        INSYMBOL();
-    else
-        ERROR(20);
-    EXPRESSION(SETADD(&s, c->FSYS, COMMA, RPARENT, -1));
-    LOAD();
-    if (GATTR.TYPTR != INTPTR)
-        ERROR(125);
+    NEEDCOMMA();
+    LOADEXPR(SETADD(&s, c->FSYS, COMMA, RPARENT, SETEND));
+    NEEDINT();
     if (SY == COMMA) {
         INSYMBOL();
-        EXPRESSION(SETADD(&s, c->FSYS, RPARENT, -1));
-        LOAD();
-        if (GATTR.TYPTR != INTPTR)
-            ERROR(125);
+        LOADEXPR(SETADD(&s, c->FSYS, RPARENT, SETEND));
+        NEEDINT();
     } else
         GENLDC(-1);
     if (c->LKEY == 37)
@@ -1086,9 +1071,8 @@ static void BLOCKIO(struct CALLCTX *c)
         GENLDC(0);
     GENLDC(0);
     GENLDC(0);
-    GEN2(77, 0, 28);                            /* CXP SYS BLOCKIO */
-    if (IOCHECK)
-        GEN1(30, 0);                            /* CSP IOC */
+    GENSYS(28);                                 /* CXP SYS BLOCKIO */
+    GENIOC();
     GATTR.TYPTR = INTPTR;
 }
 
@@ -1097,7 +1081,7 @@ static void SIZEOF(void)
     CTP LCP;
     SETS s;
     if (SY == IDENT) {
-        SEARCHID(SETADD(&s, &VARS, TYPES, FIELD, -1), &LCP);
+        SEARCHID(SETADD(&s, &VARS, TYPES, FIELD, SETEND), &LCP);
         INSYMBOL();
         if (LCP->IDTYPE != NULL)
             GENLDC(LCP->IDTYPE->SIZE * CHRSPERWD);
@@ -1187,34 +1171,33 @@ static void READSTMT(struct CALLCTX *c)         /* READ */
     SETS s, f;
     FILEPTR = INPUTPTR;
     if (SY == IDENT && c->WASLPARENT)
-        FILEARG(SETADD(&f, &VARS, FIELD, -1), &FILEPTR);
+        FILEARG(SETADD(&f, &VARS, FIELD, SETEND), &FILEPTR);
     else if (c->WASLPARENT)
         ERROR(2);
     if (c->WASLPARENT && SY != RPARENT) {
         do {
             LOADIDADDR(FILEPTR);
-            VARIABLE(SETADD(&s, c->FSYS, COMMA, RPARENT, -1));
+            VARIABLE(SETADD(&s, c->FSYS, COMMA, RPARENT, SETEND));
             if (GATTR.ACCESS == BYTE)
                 ERROR(103);
             LOADADDRESS();
             if (GATTR.TYPTR != NULL) {
                 if (COMPTYPES(INTPTR, GATTR.TYPTR))
-                    GEN2(77, 0, 12);            /* CXP SYS FRDI */
+                    GENSYS(12);                 /* CXP SYS FRDI */
                 else if (COMPTYPES(REALPTR, GATTR.TYPTR))
                     GENNR(FREADREAL);
                 else if (COMPTYPES(LONGINTPTR, GATTR.TYPTR)) {
                     GENLDC(GATTR.TYPTR->SIZE);
                     GENNR(FREADDEC);
                 } else if (COMPTYPES(CHARPTR, GATTR.TYPTR))
-                    GEN2(77, 0, 16);            /* CXP SYS FRDC */
+                    GENSYS(16);                 /* CXP SYS FRDC */
                 else if (STRGTYPE(GATTR.TYPTR)) {
                     GENLDC(GATTR.TYPTR->U.AR.MAXLENG);
-                    GEN2(77, 0, 18);            /* CXP SYS FRDS */
+                    GENSYS(18);                 /* CXP SYS FRDS */
                 } else
                     ERROR(125);
             }
-            if (IOCHECK)
-                GEN1(30, 0);                    /* CSP IOC */
+            GENIOC();
             TEST = SY != COMMA;
             if (!TEST)
                 INSYMBOL();
@@ -1222,9 +1205,8 @@ static void READSTMT(struct CALLCTX *c)         /* READ */
     }
     if (c->LKEY == 2) {
         LOADIDADDR(FILEPTR);
-        GEN2(77, 0, 21);                        /* CXP SYS FRLN */
-        if (IOCHECK)
-            GEN1(30, 0);                        /* CSP IOC */
+        GENSYS(21);                             /* CXP SYS FRLN */
+        GENIOC();
     }
 }
 
@@ -1237,11 +1219,11 @@ static void WRITESTMT(struct CALLCTX *c)        /* WRITE */
     SETS s, f;
     FILEPTR = OUTPUTPTR;
     if (SY == IDENT && c->WASLPARENT)
-        FILEARG(SETADD(&f, &VARS, FIELD, KONST, FUNC, -1), &FILEPTR);
+        FILEARG(SETADD(&f, &VARS, FIELD, KONST, FUNC, SETEND), &FILEPTR);
     if (c->WASLPARENT && SY != RPARENT) {
         do {
             LOADIDADDR(FILEPTR);
-            EXPRESSION(SETADD(&s, c->FSYS, COMMA, COLON, RPARENT, -1));
+            EXPRESSION(SETADD(&s, c->FSYS, COMMA, COLON, RPARENT, SETEND));
             LSP = GATTR.TYPTR;
             if (LSP != NULL) {
                 if (LSP->FORM > LONGINT)
@@ -1268,17 +1250,14 @@ static void WRITESTMT(struct CALLCTX *c)        /* WRITE */
             if (LSP == INTPTR) {
                 if (DEFAULT)
                     GENLDC(0);
-                GEN2(77, 0, 13);                /* CXP SYS FWRI */
+                GENSYS(13);                     /* CXP SYS FWRI */
             } else if (LSP == REALPTR) {
                 if (DEFAULT)
                     GENLDC(0);
                 if (SY == COLON) {
                     INSYMBOL();
-                    EXPRESSION(SETADD(&s, c->FSYS, COMMA, RPARENT, -1));
-                    LOAD();
-                    if (GATTR.TYPTR != NULL)
-                        if (GATTR.TYPTR != INTPTR)
-                            ERROR(125);
+                    LOADEXPR(SETADD(&s, c->FSYS, COMMA, RPARENT, SETEND));
+                    CHECKINT();
                 } else
                     GENLDC(0);
                 GENNR(FWRITEREAL);
@@ -1289,11 +1268,11 @@ static void WRITESTMT(struct CALLCTX *c)        /* WRITE */
             } else if (LSP == CHARPTR) {
                 if (DEFAULT)
                     GENLDC(0);
-                GEN2(77, 0, 17);                /* CXP SYS FWRC */
+                GENSYS(17);                     /* CXP SYS FWRC */
             } else if (STRGTYPE(LSP)) {
                 if (DEFAULT)
                     GENLDC(0);
-                GEN2(77, 0, 19);                /* CXP SYS FWRS */
+                GENSYS(19);                     /* CXP SYS FWRS */
             } else if (PAOFCHAR(LSP)) {
                 LMAX = 0;
                 if (LSP->U.AR.INXTYPE != NULL) {
@@ -1303,11 +1282,10 @@ static void WRITESTMT(struct CALLCTX *c)        /* WRITE */
                 if (DEFAULT)
                     GENLDC(LMAX);
                 GENLDC(LMAX);
-                GEN2(77, 0, 20);                /* CXP SYS FWRB */
+                GENSYS(20);                     /* CXP SYS FWRB */
             } else
                 ERROR(125);
-            if (IOCHECK)
-                GEN1(30, 0);                    /* CSP IOC */
+            GENIOC();
             TEST = SY != COMMA;
             if (!TEST)
                 INSYMBOL();
@@ -1315,9 +1293,8 @@ static void WRITESTMT(struct CALLCTX *c)        /* WRITE */
     }
     if (c->LKEY == 4) {                         /* WRITELN */
         LOADIDADDR(FILEPTR);
-        GEN2(77, 0, 22);                        /* CXP SYS FWLN */
-        if (IOCHECK)
-            GEN1(30, 0);                        /* CSP IOC */
+        GENSYS(22);                             /* CXP SYS FWLN */
+        GENIOC();
     }
 }
 
@@ -1338,7 +1315,7 @@ static void CALLNONSPECIAL(struct CALLCTX *c)
             if (NXT == NULL)
                 ERROR(126);
             INSYMBOL();
-            EXPRESSION(SETADD(&s, c->FSYS, COMMA, RPARENT, -1));
+            EXPRESSION(SETADD(&s, c->FSYS, COMMA, RPARENT, SETEND));
             if (GATTR.TYPTR != NULL && NXT != NULL) {
                 LSP = NXT->IDTYPE;
                 if (NXT->KLASS == FORMALVARS || LSP != NULL) {
@@ -1439,7 +1416,7 @@ static void CALLNONSPECIAL(struct CALLCTX *c)
                 GEN1(46, FCP->U.P.PFNAME);      /* CIP */
         }
     } else if (FCP->U.P.CSPNUM == 23)
-        GEN1(30, 40);                           /* (temporary I.5 translation: MEM will be CSP 23 in II.0) */
+        GENCSP(40);                           /* (temporary I.5 translation: MEM will be CSP 23 in II.0) */
     else if (FCP->U.P.CSPNUM != 21 && FCP->U.P.CSPNUM != 22)
         GEN1(30, FCP->U.P.CSPNUM);              /* CSP */
     GATTR.TYPTR = FCP->IDTYPE;
@@ -1448,8 +1425,7 @@ static void CALLNONSPECIAL(struct CALLCTX *c)
 /* a file variable, and its address */
 static void FILEVAR(SETOFSYS *FSYS)
 {
-    VARIABLE(FSYS);
-    LOADADDRESS();
+    VARADDR(FSYS);
     if (GATTR.TYPTR != NULL)
         if (GATTR.TYPTR->FORM != FILES)
             ERROR(125);
@@ -1474,8 +1450,7 @@ static void CALL(SETOFSYS *FSYS, CTP FCP)
         switch (LKEY) {
         case 7: case 8: case 9: case 10: case 11: case 13: case 14:
         case 25: case 36: case 39: case 42:
-            EXPRESSION(SETADD(&s, FSYS, COMMA, RPARENT, -1));
-            LOAD();
+            LOADEXPR(SETADD(&s, FSYS, COMMA, RPARENT, SETEND));
             break;
         }
         switch (LKEY) {
@@ -1492,8 +1467,7 @@ static void CALL(SETOFSYS *FSYS, CTP FCP)
             break;
         case 5: case 6:                         /* EOF and EOLN */
             if (c->WASLPARENT) {
-                VARIABLE(SETADD(&s, FSYS, RPARENT, -1));
-                LOADADDRESS();
+                VARADDR(SETADD(&s, FSYS, RPARENT, SETEND));
                 if (GATTR.TYPTR != NULL) {
                     if (GATTR.TYPTR->FORM != FILES)
                         ERROR(125);
@@ -1505,9 +1479,9 @@ static void CALL(SETOFSYS *FSYS, CTP FCP)
             GENLDC(0);
             GENLDC(0);
             if (LKEY == 5)
-                GEN2(77, 0, 10);                /* CXP SYS FEOF */
+                GENSYS(10);                     /* CXP SYS FEOF */
             else
-                GEN2(77, 0, 11);                /* CXP SYS FEOLN */
+                GENSYS(11);                     /* CXP SYS FEOLN */
             GATTR.TYPTR = BOOLPTR;
             break;
         case 7: case 8:                         /* PRED, SUCC */
@@ -1553,105 +1527,70 @@ static void CALL(SETOFSYS *FSYS, CTP FCP)
             }
             break;
         case 16:                                /* LENGTH */
-            STRGVAR(SETADD(&s, FSYS, RPARENT, -1), FALSE);
+            STRGVAR(SETADD(&s, FSYS, RPARENT, SETEND), FALSE);
             GENLDC(0);                          /* (the index) */
             GEN0(62);                           /* LDB */
             GATTR.TYPTR = INTPTR;
             break;
         case 17:                                /* INSERT */
-            STRGVAR(SETADD(&s, FSYS, COMMA, -1), FALSE);
-            if (SY == COMMA)
-                INSYMBOL();
-            else
-                ERROR(20);
+            STRGVAR(SETADD(&s, FSYS, COMMA, SETEND), FALSE);
+            NEEDCOMMA();
             STRGVAR(&s, TRUE);
             GENLDC(GATTR.TYPTR->U.AR.MAXLENG);
-            if (SY == COMMA)
-                INSYMBOL();
-            else
-                ERROR(20);
-            EXPRESSION(SETADD(&s, FSYS, RPARENT, -1));
-            LOAD();
-            if (GATTR.TYPTR != NULL)
-                if (GATTR.TYPTR != INTPTR)
-                    ERROR(125);
-            GEN2(77, 0, 24);                    /* CXP SYS SINSERT */
+            NEEDCOMMA();
+            LOADEXPR(SETADD(&s, FSYS, RPARENT, SETEND));
+            CHECKINT();
+            GENSYS(24);                         /* CXP SYS SINSERT */
             break;
         case 20:                                /* POS */
-            STRGVAR(SETADD(&s, FSYS, COMMA, -1), FALSE);
-            if (SY == COMMA)
-                INSYMBOL();
-            else
-                ERROR(20);
-            STRGVAR(SETADD(&s, FSYS, RPARENT, -1), FALSE);
+            STRGVAR(SETADD(&s, FSYS, COMMA, SETEND), FALSE);
+            NEEDCOMMA();
+            STRGVAR(SETADD(&s, FSYS, RPARENT, SETEND), FALSE);
             GENLDC(0);
             GENLDC(0);
-            GEN2(77, 0, 27);                    /* CXP SYS SPOS */
+            GENSYS(27);                         /* CXP SYS SPOS */
             GATTR.TYPTR = INTPTR;
             break;
         case 24:                                /* IDSEARCH */
-            VARIABLE(SETADD(&s, FSYS, COMMA, -1));
-            LOADADDRESS();
-            if (SY == COMMA)
-                INSYMBOL();
-            else
-                ERROR(20);
-            VARIABLE(SETADD(&s, FSYS, RPARENT, -1));
-            LOADADDRESS();
-            GEN1(30, 7);                        /* CSP IDS */
+            VARADDR(SETADD(&s, FSYS, COMMA, SETEND));
+            NEEDCOMMA();
+            VARADDR(SETADD(&s, FSYS, RPARENT, SETEND));
+            GENCSP(7);                          /* CSP IDS */
             break;
         case 25:                                /* TREESEARCH */
-            if (SY == COMMA)
-                INSYMBOL();
-            else
-                ERROR(20);
-            VARIABLE(SETADD(&s, FSYS, COMMA, -1));
-            LOADADDRESS();
-            if (SY == COMMA)
-                INSYMBOL();
-            else
-                ERROR(20);
-            VARIABLE(SETADD(&s, FSYS, RPARENT, -1));
-            LOADADDRESS();
+            NEEDCOMMA();
+            VARADDR(SETADD(&s, FSYS, COMMA, SETEND));
+            NEEDCOMMA();
+            VARADDR(SETADD(&s, FSYS, RPARENT, SETEND));
             GATTR.TYPTR = INTPTR;
-            GEN1(30, 8);                        /* CSP TRS */
+            GENCSP(8);                          /* CSP TRS */
             break;
         case 26:                                /* TIME */
-            VARIABLE(SETADD(&s, FSYS, COMMA, -1));
-            LOADADDRESS();
-            if (GATTR.TYPTR != NULL)
-                if (GATTR.TYPTR != INTPTR)
-                    ERROR(125);
-            if (SY == COMMA)
-                INSYMBOL();
-            else
-                ERROR(20);
-            VARIABLE(SETADD(&s, FSYS, RPARENT, -1));
-            LOADADDRESS();
-            if (GATTR.TYPTR != NULL)
-                if (GATTR.TYPTR != INTPTR)
-                    ERROR(125);
-            GEN1(30, 9);                        /* CSP TIM */
+            VARADDR(SETADD(&s, FSYS, COMMA, SETEND));
+            CHECKINT();
+            NEEDCOMMA();
+            VARADDR(SETADD(&s, FSYS, RPARENT, SETEND));
+            CHECKINT();
+            GENCSP(9);                          /* CSP TIM */
             break;
         case 33: case 28: case 29: case 30:     /* OPEN, RESET, REWRITE */
-            FILEVAR(SETADD(&s, FSYS, COMMA, RPARENT, -1));
+            FILEVAR(SETADD(&s, FSYS, COMMA, RPARENT, SETEND));
             if (SY != COMMA) {
                 if (LKEY == 33)
-                    GEN2(77, 0, 4);             /* CXP SYS FRESET */
+                    GENSYS(4);                  /* CXP SYS FRESET */
                 else
                     ERROR(20);
             } else {
                 INSYMBOL();
-                STRGVAR(SETADD(&s, FSYS, RPARENT, -1), FALSE);
+                STRGVAR(SETADD(&s, FSYS, RPARENT, SETEND), FALSE);
                 if (LKEY == 28 || LKEY == 30)
                     GENLDC(0);
                 else
                     GENLDC(1);
                 GENLDC(0);
-                GEN2(77, 0, 5);                 /* CXP SYS FOPEN */
+                GENSYS(5);                      /* CXP SYS FOPEN */
             }
-            if (IOCHECK)
-                GEN1(30, 0);                    /* CSP IOC */
+            GENIOC();
             break;
         case 39:                                /* TRUNC */
             if (GATTR.TYPTR == INTPTR) {
@@ -1660,7 +1599,7 @@ static void CALL(SETOFSYS *FSYS, CTP FCP)
             }
             if (GATTR.TYPTR != NULL) {
                 if (GATTR.TYPTR == REALPTR)
-                    GEN1(30, 23);               /* CSP TRUNC (temporary: TRUNC will be CSP 14 in II.0) */
+                    GENCSP(23);                 /* CSP TRUNC (temporary: TRUNC will be CSP 14 in II.0) */
                 else if (GATTR.TYPTR->FORM == LONGINT) {
                     GENLDC(20);                 /* DTNC */
                     GENNR(DECOPS);
@@ -1731,7 +1670,7 @@ static void FACTOR(SETOFSYS *FSYS)
     while (IN(SY, &FACBEGSYS)) {
         switch (SY) {
         case IDENT:
-            SEARCHID(SETOF(&t, KONST, FORMALVARS, ACTUALVARS, FIELD, FUNC, -1), &LCP);
+            SEARCHID(SETOF(&t, KONST, FORMALVARS, ACTUALVARS, FIELD, FUNC, SETEND), &LCP);
             INSYMBOL();
             if (LCP->KLASS == FUNC) {
                 CALL(FSYS, LCP);
@@ -1782,7 +1721,7 @@ static void FACTOR(SETOFSYS *FSYS)
             break;
         case LPARENT:
             INSYMBOL();
-            EXPRESSION(SETADD(&s, FSYS, RPARENT, -1));
+            EXPRESSION(SETADD(&s, FSYS, RPARENT, SETEND));
             if (SY == RPARENT)
                 INSYMBOL();
             else
@@ -1817,7 +1756,7 @@ static void FACTOR(SETOFSYS *FSYS)
                 INSYMBOL();
             } else {
                 do {
-                    EXPRESSION(SETADD(&s, FSYS, COMMA, RBRACK, COLON, -1));
+                    EXPRESSION(SETADD(&s, FSYS, COMMA, RBRACK, COLON, SETEND));
                     if (GATTR.TYPTR != NULL) {
                         if (GATTR.TYPTR->FORM != SCALAR) {
                             ERROR(136);
@@ -1835,7 +1774,7 @@ static void FACTOR(SETOFSYS *FSYS)
                             if (SY == COLON) {
                                 INSYMBOL();
                                 LOP = 20;       /* SRS */
-                                EXPRESSION(SETADD(&s, FSYS, COMMA, RBRACK, -1));
+                                EXPRESSION(SETADD(&s, FSYS, COMMA, RBRACK, SETEND));
                                 if (COMPTYPES(LSP->U.ELSET, GATTR.TYPTR))
                                     ;
                                 else {
@@ -1911,7 +1850,7 @@ static void TERM(SETOFSYS *FSYS)
     ATTR LATTR;
     OPERATOR LOP;
     SETS s;
-    FACTOR(SETADD(&s, FSYS, MULOP, -1));
+    FACTOR(SETADD(&s, FSYS, MULOP, SETEND));
     while (SY == MULOP) {
         LOAD();
         LATTR = GATTR;
@@ -1992,7 +1931,7 @@ static void SIMPLEEXPRESSION(SETOFSYS *FSYS)
         SIGNED = OP == MINUS;
         INSYMBOL();
     }
-    TERM(SETADD(&s, FSYS, ADDOP, -1));
+    TERM(SETADD(&s, FSYS, ADDOP, SETEND));
     if (SIGNED) {
         LOAD();
         if (GATTR.TYPTR == INTPTR)
@@ -2095,7 +2034,7 @@ static void EXPRESSION(SETOFSYS *FSYS)
     BOOLEAN LSTRING, GSTRING;
     INTEGER LMIN, LMAX;
     SETS s;
-    SIMPLEEXPRESSION(SETADD(&s, FSYS, RELOP, -1));
+    SIMPLEEXPRESSION(SETADD(&s, FSYS, RELOP, SETEND));
     if (SY == RELOP) {
         LSTRING = GATTR.KIND == CST && (STRGTYPE(GATTR.TYPTR) || GATTR.TYPTR == CHARPTR);
         OPERAND();
@@ -2244,7 +2183,7 @@ static void ASSIGNMENT(SETOFSYS *FSYS, CTP FCP)
     BOOLEAN CSTRING, PAONLEFT;
     INTEGER LMIN, LMAX;
     SETS s;
-    SELECTOR(SETADD(&s, FSYS, BECOMES, -1), FCP);
+    SELECTOR(SETADD(&s, FSYS, BECOMES, SETEND), FCP);
     if (SY == BECOMES) {
         LMAX = 0;
         CSTRING = FALSE;
@@ -2364,7 +2303,7 @@ static void GOTOSTATEMENT(void)
 static void STATEMENTS(SETOFSYS *FSYS, SYMBOL FSY)
 {
     SETS s;
-    SETADD(&s, FSYS, SEMICOLON, FSY, -1);
+    SETADD(&s, FSYS, SEMICOLON, FSY, SETEND);
     do {
         do
             STATEMENT(&s);
@@ -2391,7 +2330,7 @@ static void IFSTATEMENT(SETOFSYS *FSYS)
     BOOLEAN CONDCOMPILE, NOTHENCLAUSE;
     SETS s;
     CONDCOMPILE = FALSE;
-    EXPRESSION(SETADD(&s, FSYS, THENSY, -1));
+    EXPRESSION(SETADD(&s, FSYS, THENSY, SETEND));
     if (GATTR.KIND == CST)
         if (GATTR.TYPTR == BOOLPTR) {
             CONDCOMPILE = TRUE;
@@ -2406,7 +2345,7 @@ static void IFSTATEMENT(SETOFSYS *FSYS)
         INSYMBOL();
     else
         ERROR(52);
-    STATEMENT(SETADD(&s, FSYS, ELSESY, -1));
+    STATEMENT(SETADD(&s, FSYS, ELSESY, SETEND));
     if (CONDCOMPILE) {
         if (NOTHENCLAUSE)
             IC = LIC;
@@ -2445,8 +2384,7 @@ static void CASESTATEMENT(SETOFSYS *FSYS)
     LBP LADDR, LCIX;
     INTEGER NULSTMT, LMIN, LMAX;
     SETS s;
-    EXPRESSION(SETADD(&s, FSYS, OFSY, COMMA, COLON, -1));
-    LOAD();
+    LOADEXPR(SETADD(&s, FSYS, OFSY, COMMA, COLON, SETEND));
     GENLABEL(&LCIX);
     GENJMP(57, LCIX);                           /* UJP */
     LSP = GATTR.TYPTR;
@@ -2464,7 +2402,7 @@ static void CASESTATEMENT(SETOFSYS *FSYS)
     do {
         LPT3 = NULL;
         do {
-            CONSTANT(SETADD(&s, FSYS, COMMA, COLON, -1), &LSP1, &LVAL);
+            CONSTANT(SETADD(&s, FSYS, COMMA, COLON, SETEND), &LSP1, &LVAL);
             if (LSP != NULL) {
                 if (COMPTYPES(LSP, LSP1)) {
                     LPT1 = FSTPTR;
@@ -2497,7 +2435,7 @@ static void CASESTATEMENT(SETOFSYS *FSYS)
             INSYMBOL();
         else
             ERROR(5);
-        SETADD(&s, FSYS, SEMICOLON, -1);
+        SETADD(&s, FSYS, SEMICOLON, SETEND);
         do
             STATEMENT(&s);
         while (IN(SY, &STATBEGSYS));
@@ -2561,7 +2499,7 @@ static void WHILESTATEMENT(SETOFSYS *FSYS)
     SETS s;
     GENLABEL(&LADDR);
     PUTLABEL(LADDR);
-    EXPRESSION(SETADD(&s, FSYS, DOSY, -1));
+    EXPRESSION(SETADD(&s, FSYS, DOSY, SETEND));
     GENLABEL(&LCIX);
     GENFJP(LCIX);
     if (SY == DOSY)
@@ -2600,11 +2538,11 @@ static void FORSTATEMENT(SETOFSYS *FSYS)
         INSYMBOL();
     } else {
         ERROR(2);
-        SKIP(SETADD(&s, FSYS, BECOMES, TOSY, DOWNTOSY, DOSY, -1));
+        SKIP(SETADD(&s, FSYS, BECOMES, TOSY, DOWNTOSY, DOSY, SETEND));
     }
     if (SY == BECOMES) {
         INSYMBOL();
-        EXPRESSION(SETADD(&s, FSYS, TOSY, DOWNTOSY, DOSY, -1));
+        EXPRESSION(SETADD(&s, FSYS, TOSY, DOWNTOSY, DOSY, SETEND));
         if (GATTR.TYPTR != NULL) {
             if (GATTR.TYPTR->FORM != SCALAR)
                 ERROR(144);
@@ -2617,13 +2555,13 @@ static void FORSTATEMENT(SETOFSYS *FSYS)
         }
     } else {
         ERROR(51);
-        SKIP(SETADD(&s, FSYS, TOSY, DOWNTOSY, DOSY, -1));
+        SKIP(SETADD(&s, FSYS, TOSY, DOWNTOSY, DOSY, SETEND));
     }
     GENLABEL(&LADDR);
     if (SY == TOSY || SY == DOWNTOSY) {
         LSY = SY;
         INSYMBOL();
-        EXPRESSION(SETADD(&s, FSYS, DOSY, -1));
+        EXPRESSION(SETADD(&s, FSYS, DOSY, SETEND));
         if (GATTR.TYPTR != NULL) {
             if (GATTR.TYPTR->FORM != SCALAR)
                 ERROR(144);
@@ -2647,7 +2585,7 @@ static void FORSTATEMENT(SETOFSYS *FSYS)
         }
     } else {
         ERROR(55);
-        SKIP(SETADD(&s, FSYS, DOSY, -1));
+        SKIP(SETADD(&s, FSYS, DOSY, SETEND));
     }
     GENLABEL(&LCIX);
     GENJMP(33, LCIX);                           /* FJP */
@@ -2678,13 +2616,13 @@ static void WITHSTATEMENT(SETOFSYS *FSYS)
     LCNT2 = 0;
     do {
         if (SY == IDENT) {
-            SEARCHID(SETADD(&s, &VARS, FIELD, -1), &LCP);
+            SEARCHID(SETADD(&s, &VARS, FIELD, SETEND), &LCP);
             INSYMBOL();
         } else {
             ERROR(2);
             LCP = UVARPTR;
         }
-        SELECTOR(SETADD(&s, FSYS, COMMA, DOSY, -1), LCP);
+        SELECTOR(SETADD(&s, FSYS, COMMA, DOSY, SETEND), LCP);
         if (GATTR.TYPTR != NULL) {
             if (GATTR.TYPTR->FORM == RECORDS) {
                 if (TOP < DISPLIMIT) {
@@ -2756,15 +2694,15 @@ static void STATEMENT(SETOFSYS *FSYS)
         GEN1(85, SCREENDOTS + 1);               /* BPT */
         BPTONLINE = TRUE;
     }
-    if (!IN(SY, SETADD(&s, FSYS, IDENT, -1))) {
+    if (!IN(SY, SETADD(&s, FSYS, IDENT, SETEND))) {
         ERROR(6);
         SKIP(FSYS);
     }
-    if (IN(SY, SETADD(&s, &STATBEGSYS, IDENT, -1))) {
+    if (IN(SY, SETADD(&s, &STATBEGSYS, IDENT, SETEND))) {
         PMARK(&HEAP);                           /* (for the label cleanup) */
         switch (SY) {
         case IDENT:
-            SEARCHID(SETADD(&t, &VARS, FIELD, FUNC, PROC, -1), &LCP);
+            SEARCHID(SETADD(&t, &VARS, FIELD, FUNC, PROC, SETEND), &LCP);
             INSYMBOL();
             if (LCP->KLASS == PROC)
                 CALL(FSYS, LCP);
@@ -2890,7 +2828,7 @@ static void BODY(SETOFSYS *FSYS, CTP FPROCP)
             while (LCP != NULL) {
                 if (LCP->U.SEGID >= 0) {
                     GENLDC(LCP->U.SEGID);
-                    GEN1(30, 21);               /* CSP GETSEG */
+                    GENCSP(21);                 /* CSP GETSEG */
                 }
                 LCP = LCP->NEXT;
             }
@@ -2910,7 +2848,7 @@ static void BODY(SETOFSYS *FSYS, CTP FPROCP)
             GENLDC(-2);
         else
             GENLDC(T->U.FILTYPE->SIZE);
-        GEN2(77, 0, 3);                         /* CXP SYS FINIT */
+        GENSYS(3);                              /* CXP SYS FINIT */
         LCP = LCP->NEXT;
     }
     if (LEVEL == 1 && !SYSCOMP)
@@ -2925,7 +2863,7 @@ static void BODY(SETOFSYS *FSYS, CTP FPROCP)
     while (LCP != NULL) {
         GEN2(50, 0, LCP->U.V.VADDR);            /* LDA */
         GENLDC(0);
-        GEN2(77, 0, 6);                         /* CXP SYS FCLOSE */
+        GENSYS(6);                              /* CXP SYS FCLOSE */
         LCP = LCP->NEXT;
     }
     if (!INMODULE)
@@ -2934,7 +2872,7 @@ static void BODY(SETOFSYS *FSYS, CTP FPROCP)
             while (LCP != NULL) {
                 if (LCP->U.SEGID >= 0) {
                     GENLDC(LCP->U.SEGID);
-                    GEN1(30, 22);               /* CSP RELSEG */
+                    GENCSP(22);                 /* CSP RELSEG */
                 }
                 LCP = LCP->NEXT;
             }
