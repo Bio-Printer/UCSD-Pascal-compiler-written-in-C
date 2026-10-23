@@ -66,7 +66,7 @@ those of the Pascal compiler: COMPINIT, DECLARATIONPART and BODYPART are in
 memory only while they run, and a $S+ or a small memory makes them take
 turns (swapping); NOSWAP keeps both in when 20000 words are free.  The
 compiler's own source, the largest program here, compiles from the shell
-with 1757 words to spare.
+with 3777 words to spare.
 
 The C sources, the host build (the same compiler for Linux, with the
 P-machine's REAL arithmetic emulated) and the tests are in the repository
