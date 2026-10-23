@@ -28,7 +28,7 @@ one.
 THE FILES
 
   PC.CODE       the compiler
-  BUILD.TEXT    CC @PASCALC:BUILD makes PC2.CODE, the same as PC.CODE
+  BUILD.TEXT    CC @PASCALC:BUILD makes PC.CODE again, the same
   COMPGLBL.H    COMPGLBLS: the constants, types and global variables
   PCIO.H        what the compiler reads and writes (the system's files)
   GLOBALS.C     the global variables
@@ -57,7 +57,7 @@ BUILDING IT
   CC @PASCALC:BUILD   (from the shell; TINY-C: on line)
 
 compiles the modules (their .OBJ files go onto PASCALC:) and links
-PASCALC:PC2.CODE, the same as PC.CODE byte for byte.
+PASCALC:PC.CODE, the same as the one it replaces, byte for byte.
 
 MEMORY
 

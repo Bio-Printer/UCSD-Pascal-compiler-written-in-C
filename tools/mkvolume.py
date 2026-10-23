@@ -21,10 +21,10 @@ MODULES = ['globals', 'builtin', 'sets', 'heap', 'procs', 'compinit', 'decpart',
 BUILD = """; BUILD -- the Pascal compiler in C: CC @PASCALC:BUILD from the shell (or
 ; X(ecute TINY-C:CC and answer @PASCALC:BUILD), TINY-C: on line.  Compiles
 ; every module (-O: each NAME.OBJ onto PASCALC:), then links them into
-; PASCALC:PC2.CODE, the same as PC.CODE.
+; PASCALC:PC.CODE, the same as the one it replaces.
 -O PASCALC:
 """ + ''.join('-C %s\n' % m.upper() for m in MODULES) + \
-    '-L PASCALC:PC2=%s\n' % ','.join(m.upper() for m in MODULES)
+    '-L PASCALC:PC=%s\n' % ','.join(m.upper() for m in MODULES)
 
 WHAT = {
     'globals': 'the global variables',
@@ -54,7 +54,7 @@ def main():
     files = [('README.TEXT', ucsdvol.text_to_ucsd(open(os.path.join(ROOT, 'src', 'readme.txt')).read()), 3,
               'what is on PASCALC:, how to use and build it'),
              ('PC.CODE', open(pc, 'rb').read(), 2, 'the compiler: PC NAME [CODE] from the shell'),
-             ('BUILD.TEXT', ucsdvol.text_to_ucsd(BUILD), 3, 'CC @PASCALC:BUILD makes PC2.CODE (= PC.CODE)'),
+             ('BUILD.TEXT', ucsdvol.text_to_ucsd(BUILD), 3, 'CC @PASCALC:BUILD makes PC.CODE again'),
              ('COMPGLBL.H', ucsdvol.text_to_ucsd(open(os.path.join(ROOT, 'src', 'compglbl.h')).read()), 3,
               'COMPGLBLS: constants, types, global variables'),
              ('PCIO.H', ucsdvol.text_to_ucsd(open(os.path.join(ROOT, 'src', 'pcio.h')).read()), 3,

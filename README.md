@@ -4,10 +4,14 @@ The UCSD Pascal II.0 compiler (`SYSTEM.COMPILER`, U132.A source revision 1.08)
 rewritten in C for [Tiny-C](https://github.com/Bio-Printer/UCSD-TinyC), to replace
 the Pascal one on the P-System.
 
-**Status: phase 1 started** -- a routine-by-routine translation of the Pascal
-compiler, which must produce the same code files as the original, byte for
-byte.  Phase 2 then improves the code it generates (smaller, tighter P-code; the
-emulator's extra CSPs; 8-byte doubles).
+**Status: phase 1 done** -- a routine-by-routine translation of the Pascal
+compiler that produces the same code files as the original.  All 25 programs
+of the corpus (below), the compiler's own source among them, compile to code
+files identical to SYSTEM.COMPILER's: on the host, and on the P-System from
+the Tiny-C shell (`PC NAME`), where CC also rebuilds PC.CODE from its sources
+(`CC @PASCALC:BUILD`).  Next: SYSTEM.COMPILER; then phase 2, which improves
+the code it generates (smaller, tighter P-code; the emulator's extra CSPs;
+8-byte doubles).
 
 ## Goals
 
@@ -29,9 +33,19 @@ emulator's extra CSPs; 8-byte doubles).
   compiler itself, the operating system and the Filer (OS source v1.14), the
   editor (L2), the linker, BASIC, the long-integer unit (PASCALIO), the U138
   utilities, BIGGY's MYGOTOXY and SAMPLEGOTO, and the emulator's validation
-  programs -- 24 code files with their console transcripts.
-* The C compiler builds on the host too (gcc), so it can be run on the whole
-  corpus in seconds and compared byte for byte; then the same C, compiled by
-  Tiny-C, on the P-System.
+  programs -- 25 code files with their console transcripts.
+* `make` builds the compiler on the host (`build/pc`, gcc) and
+  `tools/compare.py` compiles the corpus with it and compares each code file
+  with the reference: everything the code file defines (the segment
+  dictionary, the code, the linker records, a unit's interface text), byte
+  for byte.  Bytes the compiler never sets -- what was in memory, which the
+  Pascal's NEW does not clear -- are found by compiling twice with new memory
+  filled differently, and left out.
+* `make psys` builds it with Tiny-C for the P-System (`build/psys/PC.CODE`);
+  `tools/psysrun.py` compiles the corpus with it from the shell in the
+  emulator and compares the same way.
+* `tools/mkvolume.py` makes the volume PASCALC: (`build/PASCAL-C.BLK`: PC.CODE,
+  its sources, BUILD.TEXT, README.TEXT); `tools/psysbuild.py` runs
+  `CC @PASCALC:BUILD` on the P-System, which must give the host's PC.CODE.
 
 See [docs/PLAN.md](docs/PLAN.md) for how the Pascal is translated.

@@ -224,13 +224,17 @@ void REALNUMBER(INTEGER IPART, INTEGER ENDI, INTEGER FPART, INTEGER ENDF,
                 INTEGER EPART, INTEGER ENDE, INTEGER SIGN)
 {
     INTEGER EXPONENT, J;
-    REAL RSUM;
+    REAL RSUM, D;                                       /* (D: CC's expressions are short) */
     CSP LVP;
     RSUM = RFLOAT(0);
-    for (J = IPART; J <= ENDI; J++)
-        RSUM = RADD(RMUL(RSUM, RFLOAT(10)), RFLOAT(SYMBUFP[J] - '0'));
-    for (J = ENDF; J >= FPART; J--)
-        RSUM = RADD(RSUM, RDIVR(RFLOAT(SYMBUFP[J] - '0'), RPOT(J - FPART + 1)));
+    for (J = IPART; J <= ENDI; J++) {
+        D = RFLOAT(SYMBUFP[J] - '0');
+        RSUM = RADD(RMUL(RSUM, RFLOAT(10)), D);
+    }
+    for (J = ENDF; J >= FPART; J--) {
+        D = RDIVR(RFLOAT(SYMBUFP[J] - '0'), RPOT(J - FPART + 1));
+        RSUM = RADD(RSUM, D);
+    }
     EXPONENT = 0;
     for (J = EPART; J <= ENDE; J++)
         EXPONENT = EXPONENT * 10 + SYMBUFP[J] - '0';
@@ -249,8 +253,10 @@ void REALNUMBER(INTEGER IPART, INTEGER ENDI, INTEGER FPART, INTEGER ENDF,
 /* the lines a minute, when it is more than 32767: two parts of at most 4 digits */
 static void WRITERATE(REAL RATE)
 {
+    REAL R;
     LGTH = RTRUNC(RDIVR(RATE, RFLOAT(10000)));
-    STARTDOTS = RROUND(RSUB(RATE, RMUL(RFLOAT(LGTH), RFLOAT(10000))));
+    R = RMUL(RFLOAT(LGTH), RFLOAT(10000));
+    STARTDOTS = RROUND(RSUB(RATE, R));
     if (STARTDOTS < 0) {
         LGTH = LGTH - 1;
         STARTDOTS = STARTDOTS + 10000;

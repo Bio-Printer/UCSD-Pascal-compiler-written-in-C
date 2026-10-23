@@ -58,39 +58,117 @@ typedef INTEGER BOOLEAN;
 #define MAXPROCNUM 149
 
 /* ---- TYPE ---- */
+/* (The values of the enumerated types are macros, not enums: CC on the
+   P-System keeps every enum constant of a header in the memory it compiles
+   a module in, and these are 170; the preprocessor has room for them.
+   UNITFILE's stay an enum: WORKCODE is also a field of INFOREC.) */
 /* basic symbols, in the order of IDSEARCH's table */
-enum { IDENT, COMMA, COLON, SEMICOLON, LPARENT, RPARENT, DOSY, TOSY,
-       DOWNTOSY, ENDSY, UNTILSY, OFSY, THENSY, ELSESY, BECOMES, LBRACK,
-       RBRACK, ARROW, PERIOD, BEGINSY, IFSY, CASESY, REPEATSY, WHILESY,
-       FORSY, WITHSY, GOTOSY, LABELSY, CONSTSY, TYPESY, VARSY, PROCSY,
-       FUNCSY, PROGSY, FORWARDSY, INTCONST, REALCONST, STRINGCONST,
-       NOTSY, MULOP, ADDOP, RELOP, SETSY, PACKEDSY, ARRAYSY, RECORDSY,
-       FILESY, OTHERSY, LONGCONST, USESSY, UNITSY, INTERSY, IMPLESY,
-       EXTERNLSY, SEPARATSY };
+#define IDENT 0
+#define COMMA 1
+#define COLON 2
+#define SEMICOLON 3
+#define LPARENT 4
+#define RPARENT 5
+#define DOSY 6
+#define TOSY 7
+#define DOWNTOSY 8
+#define ENDSY 9
+#define UNTILSY 10
+#define OFSY 11
+#define THENSY 12
+#define ELSESY 13
+#define BECOMES 14
+#define LBRACK 15
+#define RBRACK 16
+#define ARROW 17
+#define PERIOD 18
+#define BEGINSY 19
+#define IFSY 20
+#define CASESY 21
+#define REPEATSY 22
+#define WHILESY 23
+#define FORSY 24
+#define WITHSY 25
+#define GOTOSY 26
+#define LABELSY 27
+#define CONSTSY 28
+#define TYPESY 29
+#define VARSY 30
+#define PROCSY 31
+#define FUNCSY 32
+#define PROGSY 33
+#define FORWARDSY 34
+#define INTCONST 35
+#define REALCONST 36
+#define STRINGCONST 37
+#define NOTSY 38
+#define MULOP 39
+#define ADDOP 40
+#define RELOP 41
+#define SETSY 42
+#define PACKEDSY 43
+#define ARRAYSY 44
+#define RECORDSY 45
+#define FILESY 46
+#define OTHERSY 47
+#define LONGCONST 48
+#define USESSY 49
+#define UNITSY 50
+#define INTERSY 51
+#define IMPLESY 52
+#define EXTERNLSY 53
+#define SEPARATSY 54
 typedef INTEGER SYMBOL;
 
-enum { MUL, RDIV, ANDOP, IDIV, IMOD, PLUS, MINUS, OROP, LTOP, LEOP,
-       GEOP, GTOP, NEOP, EQOP, INOP, NOOP };
+#define MUL 0
+#define RDIV 1
+#define ANDOP 2
+#define IDIV 3
+#define IMOD 4
+#define PLUS 5
+#define MINUS 6
+#define OROP 7
+#define LTOP 8
+#define LEOP 9
+#define GEOP 10
+#define GTOP 11
+#define NEOP 12
+#define EQOP 13
+#define INOP 14
+#define NOOP 15
 typedef INTEGER OPERATOR;
 
 typedef struct { unsigned w[4]; } SETS;  /* SETOFSYS (55 members), SETOFIDS */
 typedef SETS SETOFSYS;
 typedef SETS SETOFIDS;
 
-enum { SEEK, FREADREAL, FWRITEREAL, FREADDEC, FWRITEDEC, DECOPS };
+#define SEEK 0
+#define FREADREAL 1
+#define FWRITEREAL 2
+#define FREADDEC 3
+#define FWRITEDEC 4
+#define DECOPS 5
 typedef INTEGER NONRESIDENT;
 typedef INTEGER NONRESPFLIST[DECOPS + 1];
 
 /* constants */
-enum { REEL, PSET, STRG, TRIX, LONG };
+#define REEL 0
+#define PSET 1
+#define STRG 2
+#define TRIX 3
+#define LONG 4
 typedef INTEGER CSTCLASS;
 typedef struct CONSTREC *CSP;
+/* (each variant's type has a name, CST_<variant>, ST_..., ID_..., for NEWCONST,
+   NEWTYPE, NEWID: their sizes) */
+typedef struct { INTEGER LLENG, LLAST; INTEGER LONGVAL[9 + 1]; } CST_L;   /* LONG ([1..9]) */
+typedef REAL CST_RVAL;                                                  /* REEL */
 struct CONSTREC {
     CSTCLASS CCLASS;
-    union {
-        struct { INTEGER LLENG, LLAST; INTEGER LONGVAL[9 + 1]; } L;  /* LONG ([1..9]) */
+    union CSTVARIANT {
+        CST_L L;
         INTEGER CSTVAL0[8];             /* TRIX: CSTVAL[1..8] (CSTVAL(P, I)): overlaps the following */
-        REAL RVAL;                      /* REEL */
+        CST_RVAL RVAL;
         WORD PVAL[8];                   /* PSET: SET OF 0..127, 16 members a word */
         struct { INTEGER SLGTH; CHAR SVAL[STRGLGTH + 1]; } S;  /* STRG ([1..STRGLGTH]) */
     } U;
@@ -104,67 +182,109 @@ typedef union { INTEGER IVAL; CSP VALP; } VALU;
 typedef INTEGER BITRANGE, OPRANGE, CURSRANGE, PROCRANGE, LEVRANGE, ADDRRANGE,
                 JTABRANGE, SEGRANGE, DISPRANGE;
 
-enum { SCALAR, SUBRANGE, POINTER, LONGINT, POWER, ARRAYS,
-       RECORDS, FILES, TAGFLD, VARIANT };
+#define SCALAR 0
+#define SUBRANGE 1
+#define POINTER 2
+#define LONGINT 3
+#define POWER 4
+#define ARRAYS 5
+#define RECORDS 6
+#define FILES 7
+#define TAGFLD 8
+#define VARIANT 9
 typedef INTEGER STRUCTFORM;
-enum { STANDARD, DECLARED, SPECIAL };
+#define STANDARD 0
+#define DECLARED 1
+#define SPECIAL 2
 typedef INTEGER DECLKIND;
 
 typedef struct STRUCTURE *STP;
 typedef struct IDENTIFIER *CTP;
 
+typedef struct { DECLKIND SCALKIND; CTP FCONST; } ST_SC;              /* SCALAR */
+typedef struct { STP RANGETYPE; VALU MIN, MAX; } ST_SR;              /* SUBRANGE */
+typedef STP ST_ELTYPE;                                               /* POINTER */
+typedef STP ST_ELSET;                                                /* POWER */
+typedef struct { STP AELTYPE, INXTYPE; BOOLEAN AISPACKD;
+                 BITRANGE ELSPERWD, ELWIDTH; BOOLEAN AISSTRNG;
+                 INTEGER MAXLENG; } ST_AR;                           /* ARRAYS */
+typedef struct { CTP FSTFLD; STP RECVAR; } ST_RE;                    /* RECORDS */
+typedef STP ST_FILTYPE;                                              /* FILES */
+typedef struct { CTP TAGFIELDP; STP FSTVAR; } ST_TF;                 /* TAGFLD */
+typedef struct { STP NXTVAR, SUBVAR; VALU VARVAL; } ST_VA;           /* VARIANT */
 struct STRUCTURE {
     ADDRRANGE SIZE;
     STRUCTFORM FORM;
-    union {
-        struct { DECLKIND SCALKIND; CTP FCONST; } SC;             /* SCALAR */
-        struct { STP RANGETYPE; VALU MIN, MAX; } SR;             /* SUBRANGE */
-        STP ELTYPE;                                              /* POINTER */
-        STP ELSET;                                               /* POWER */
-        struct { STP AELTYPE, INXTYPE; BOOLEAN AISPACKD;
-                 BITRANGE ELSPERWD, ELWIDTH; BOOLEAN AISSTRNG;
-                 INTEGER MAXLENG; } AR;                          /* ARRAYS */
-        struct { CTP FSTFLD; STP RECVAR; } RE;                   /* RECORDS */
-        STP FILTYPE;                                             /* FILES */
-        struct { CTP TAGFIELDP; STP FSTVAR; } TF;                /* TAGFLD */
-        struct { STP NXTVAR, SUBVAR; VALU VARVAL; } VA;          /* VARIANT */
+    union STVARIANT {
+        ST_SC SC;
+        ST_SR SR;
+        ST_ELTYPE ELTYPE;
+        ST_ELSET ELSET;
+        ST_AR AR;
+        ST_RE RE;
+        ST_FILTYPE FILTYPE;
+        ST_TF TF;
+        ST_VA VA;
     } U;
 };
 
-enum { TYPES, KONST, FORMALVARS, ACTUALVARS, FIELD, PROC, FUNC, MODULE };
+#define TYPES 0
+#define KONST 1
+#define FORMALVARS 2
+#define ACTUALVARS 3
+#define FIELD 4
+#define PROC 5
+#define FUNC 6
+#define MODULE 7
 typedef INTEGER IDCLASS;
-enum { ACTUAL, FORMAL };
+#define ACTUAL 0
+#define FORMAL 1
 typedef INTEGER IDKIND;
 typedef CHAR ALPHA[8];
 
+/* the variants of IDENTIFIER: each a word for each field, in order (NEWIDN) */
+typedef VALU ID_VALUES;                                              /* KONST */
+typedef struct { LEVRANGE VLEV; ADDRRANGE VADDR; BOOLEAN PUBLIC; } ID_V;  /* FORMALVARS, ACTUALVARS */
+typedef struct { ADDRRANGE FLDADDR; BOOLEAN FISPACKD;
+                 BITRANGE FLDRBIT, FLDWIDTH; } ID_F;                 /* FIELD */
+typedef struct { DECLKIND PFDECKIND;
+                 INTEGER KEY;                                        /* SPECIAL */
+                 INTEGER CSPNUM;                                     /* STANDARD */
+                 LEVRANGE PFLEV; PROCRANGE PFNAME; SEGRANGE PFSEG;   /* DECLARED */
+                 IDKIND PFKIND;
+                 ADDRRANGE LOCALLC; BOOLEAN FORWDECL, EXTURNAL, INSCOPE, IMPORTED; } ID_P;  /* PROC, FUNC */
+typedef INTEGER ID_SEGID;                                            /* MODULE */
 struct IDENTIFIER {
     ALPHA NAME;
     CTP LLINK, RLINK;
     STP IDTYPE;
     CTP NEXT;
     IDCLASS KLASS;
-    union {
-        VALU VALUES;                                             /* KONST */
-        struct { LEVRANGE VLEV; ADDRRANGE VADDR; BOOLEAN PUBLIC; } V;   /* FORMALVARS, ACTUALVARS */
-        struct { ADDRRANGE FLDADDR; BOOLEAN FISPACKD;
-                 BITRANGE FLDRBIT, FLDWIDTH; } F;                /* FIELD */
-        struct { DECLKIND PFDECKIND;
-                 INTEGER KEY;                                    /* SPECIAL */
-                 INTEGER CSPNUM;                                 /* STANDARD */
-                 LEVRANGE PFLEV; PROCRANGE PFNAME; SEGRANGE PFSEG;  /* DECLARED */
-                 IDKIND PFKIND;
-                 ADDRRANGE LOCALLC; BOOLEAN FORWDECL, EXTURNAL, INSCOPE, IMPORTED; } P;  /* PROC, FUNC */
-        INTEGER SEGID;                                           /* MODULE */
+    union IDVARIANT {
+        ID_VALUES VALUES;
+        ID_V V;
+        ID_F F;
+        ID_P P;
+        ID_SEGID SEGID;
     } U;
 };
 
-enum { BLCK, CREC, VREC, REC };
+#define BLCK 0
+#define CREC 1
+#define VREC 2
+#define REC 3
 typedef INTEGER WHERE;
 
 /* expressions */
-enum { CST, VARBL, EXPR };
+#define CST 0
+#define VARBL 1
+#define EXPR 2
 typedef INTEGER ATTRKIND;
-enum { DRCT, INDRCT, PACKD, MULTI, BYTE };
+#define DRCT 0
+#define INDRCT 1
+#define PACKD 2
+#define MULTI 3
+#define BYTE 4
 typedef INTEGER VACCESS;
 
 typedef struct {
@@ -349,7 +469,7 @@ void LONGNUMBER(INTEGER IPART, INTEGER ENDI, INTEGER K, INTEGER ISUM);
 void REALNUMBER(INTEGER IPART, INTEGER ENDI, INTEGER FPART, INTEGER ENDF,
                 INTEGER EPART, INTEGER ENDE, INTEGER SIGN);
 void FINISHCOMPILE(void);
-void SCANSTRING(CHAR *STRG, INTEGER MAXLENG, CHAR STOPPER);    /* procs.c */
+void SCANSTRING(CHAR *FSTRG, INTEGER MAXLENG, CHAR STOPPER);    /* procs.c */
 
 /* the segment procedures */
 void COMPINIT(void);                            /* compinit.c */
@@ -395,16 +515,18 @@ BOOLEAN RLT(REAL a, REAL b);
 
 /* NEW, MARK, RELEASE (heap.c) */
 /* NEW(P, tag ...): the fixed part and one variant (U, last), as the Pascal
-   allocates a record; NEWID0, NEWTYPE0: a variant without fields */
-#define NEWVAR(T, v) PNEW(sizeof(T) - sizeof(((T *)0)->U) + sizeof(((T *)0)->U.v))
-#define NEWID(v) ((CTP)NEWVAR(struct IDENTIFIER, v))
-#define NEWID0() ((CTP)PNEW(sizeof(struct IDENTIFIER) - sizeof(((struct IDENTIFIER *)0)->U)))
-#define NEWTYPE(v) ((STP)NEWVAR(struct STRUCTURE, v))
-#define NEWTYPE0() ((STP)PNEW(sizeof(struct STRUCTURE) - sizeof(((struct STRUCTURE *)0)->U)))
-#define NEWCONST(v) ((CSP)NEWVAR(struct CONSTREC, v))
-/* NEW(P, tag, tag ...) whose tags end the record early: up to field f */
-#define NEWUPTO(T, f) PNEW(offsetof(T, f) + sizeof(((T *)0)->f))
-#define NEWIDUPTO(f) ((CTP)NEWUPTO(struct IDENTIFIER, U.f))
+   allocates a record (sizes of types only: an expression would be too much
+   for CC on the P-System); NEWID0, NEWTYPE0: a variant without fields;
+   NEWIDN(N): the variant's first N fields, a word each, when the tags end
+   it early (NEW(LCP, FIELD, FALSE), NEW(LCP, PROC, SPECIAL) ...) */
+#define IDHEAD (sizeof(struct IDENTIFIER) - sizeof(union IDVARIANT))
+#define NEWID(v) ((CTP)PNEW(IDHEAD + sizeof(ID_##v)))
+#define NEWID0() ((CTP)PNEW(IDHEAD))
+#define NEWIDN(n) ((CTP)PNEW(IDHEAD + (n) * sizeof(INTEGER)))
+#define STHEAD (sizeof(struct STRUCTURE) - sizeof(union STVARIANT))
+#define NEWTYPE(v) ((STP)PNEW(STHEAD + sizeof(ST_##v)))
+#define NEWTYPE0() ((STP)PNEW(STHEAD))
+#define NEWCONST(v) ((CSP)PNEW(sizeof(struct CONSTREC) - sizeof(union CSTVARIANT) + sizeof(CST_##v)))
 void *PNEW(int bytes);
 void PMARK(void **p);
 void PRELEASE(void *p);

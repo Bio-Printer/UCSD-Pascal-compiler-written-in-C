@@ -298,7 +298,7 @@ static void VARIANTLIST(struct FLCTX *f)
     *f->FRECVAR = f->LSP;
     INSYMBOL();
     if (SY == IDENT) {
-        f->LCP = f->t->PACKING ? NEWID(F) : NEWIDUPTO(F.FISPACKD);    /* NEW(LCP, FIELD, PACKING) */
+        f->LCP = f->t->PACKING ? NEWID(F) : NEWIDN(2);    /* NEW(LCP, FIELD, PACKING) */
         f->LCP->IDTYPE = NULL;
         f->LCP->KLASS = FIELD;
         f->LCP->NEXT = NULL;
@@ -430,7 +430,7 @@ static void FIELDLIST(struct TYPCTX *t, SETOFSYS *FSYS, STP *FRECVAR)
         f->NXT = f->NXT1;
         do {
             if (SY == IDENT) {
-                f->LCP = f->t->PACKING ? NEWID(F) : NEWIDUPTO(F.FISPACKD);    /* NEW(LCP, FIELD, PACKING) */
+                f->LCP = f->t->PACKING ? NEWID(F) : NEWIDN(2);    /* NEW(LCP, FIELD, PACKING) */
                 memcpy(f->LCP->NAME, ID, 8);
                 f->LCP->IDTYPE = NULL;
                 f->LCP->NEXT = f->NXT;
@@ -1058,7 +1058,7 @@ static void VARDECLARATION(struct DECCTX *d)
     do {
         do {
             if (SY == IDENT) {
-                LCP = INMODULE ? NEWID(V) : NEWIDUPTO(V.VADDR);   /* NEW(LCP, ACTUALVARS, INMODULE) */
+                LCP = INMODULE ? NEWID(V) : NEWIDN(2);   /* NEW(LCP, ACTUALVARS, INMODULE) */
                 memcpy(LCP->NAME, ID, 8);
                 LCP->NEXT = NXT;
                 LCP->KLASS = ACTUALVARS;
@@ -1159,7 +1159,7 @@ static void PARAMETERLIST(struct PDCTX *p, SETOFSYS *FSY, CTP *FPAR, CTP FCP)
                 if (SY != IDENT)
                     ERROR(2);
                 else {
-                    LCP = NEWIDUPTO(V.VADDR);    /* NEW(LCP, FORMALVARS, FALSE): may be ACTUAL (the same size) */
+                    LCP = NEWIDN(2);    /* NEW(LCP, FORMALVARS, FALSE): may be ACTUAL (the same size) */
                     memcpy(LCP->NAME, ID, 8);
                     LCP->IDTYPE = NULL;
                     LCP->NEXT = LCP2;
@@ -1320,7 +1320,7 @@ static void PROCDECLARATION(struct DECCTX *d, SYMBOL FSY, BOOLEAN SEGDEC)
                 p->FORW = FALSE;
         }
         if (!p->FORW) {
-            LCP = INMODULE ? NEWID(P) : NEWIDUPTO(P.INSCOPE);  /* NEW(LCP, PROC/FUNC, DECLARED, ACTUAL, INMODULE) */
+            LCP = INMODULE ? NEWID(P) : NEWIDN(11);  /* NEW(LCP, PROC/FUNC, DECLARED, ACTUAL, INMODULE) */
             memcpy(LCP->NAME, ID, 8);
             LCP->IDTYPE = NULL;
             LCP->U.P.LOCALLC = LC;
