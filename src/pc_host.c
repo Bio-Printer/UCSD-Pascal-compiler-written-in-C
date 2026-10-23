@@ -15,6 +15,18 @@ static CHAR *pstr(const char *s, CHAR *buf)
     return buf;
 }
 
+/* the Pascal's global arrays have no first values (the disk buffer's tail,
+   the procedure numbers of a segment that has no body for them): as new
+   memory, $PCFILL (heap.c) */
+static void unset(void)
+{
+    int fill = getenv("PCFILL") ? strtol(getenv("PCFILL"), NULL, 0) : 0;
+    memset(DISKBUF, fill, sizeof DISKBUF);
+    memset(PROCTABLE, fill, sizeof PROCTABLE);
+    memset(JTAB, fill, sizeof JTAB);
+    memset(DISPLAY, fill, sizeof DISPLAY);
+}
+
 int main(int argc, char **argv)
 {
     CHAR n[256];
@@ -32,6 +44,7 @@ int main(int argc, char **argv)
         fprintf(stderr, "pc: cannot write %s\n", argv[2]);
         return 2;
     }
+    unset();
     USERINFO.ERRSYM = USERINFO.ERRBLK = USERINFO.ERRNUM = 0;
     USERINFO.SLOWTERM = FALSE;
     USERINFO.STUPID = FALSE;

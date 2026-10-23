@@ -326,6 +326,8 @@ static void OPENREFFILE(void)
         ERROR(402);
 }
 
+static struct IDENTIFIER NOTOUTER;
+
 static void UNITDECLARATION(SETOFSYS *FSYS, void **UMARKP)
 {
     CTP LCP;
@@ -338,7 +340,11 @@ static void UNITDECLARATION(SETOFSYS *FSYS, void **UMARKP)
         SEGINX = 0;
         CURBYTE = 0;
     }
-    memset(&LLEXSTK, 0, sizeof LLEXSTK);        /* (BFSY, DFPROCP, DMARKP, ISSEGMENT: not set) */
+    /* (BFSY, DMARKP, ISSEGMENT: not set, nor read.  Nor is DFPROCP, but BLOCK
+       compares it with OUTERBLOCK -- what was on the stack, never OUTERBLOCK,
+       even when that is NIL ($U-): the unit's procedures are not its end) */
+    memset(&LLEXSTK, 0, sizeof LLEXSTK);
+    LLEXSTK.DFPROCP = &NOTOUTER;
     LLEXSTK.DOLDTOP = TOP;
     LLEXSTK.DOLDLEV = LEVEL;
     LLEXSTK.POLDPROC = CURPROC;

@@ -9,7 +9,9 @@ unit's interface text.  The rest of a block after a segment is whatever was in
 the compiler's disk buffer -- in the reference, memory left by the program run
 before it -- and so is the comment's text after its end.  Within those, the
 bytes the compiler never sets (the byte GENWORD skips to reach a word: what
-was in the code buffer, which NEW does not clear) are found by compiling twice,
+was in the code buffer, which NEW does not clear; a procedure number of a
+segment that has no body for it, from the global array PROCTABLE, never set)
+are found by compiling twice,
 new memory filled with 0 and then with 0xEE ($PCFILL): the bytes that change
 are not compared, and are counted.
 
@@ -108,7 +110,8 @@ def main(args):
             r2, got2 = compile_one(n, verbose, 0xEE)
             if got2 is None or len(got2) != len(got):
                 got2 = b''
-            unset = [i for i in range(len(got2)) if got[i] != got2[i]]
+            inside = set(i for a, b in regions(ref) for i in range(a, b)) | set(range(256, 336))
+            unset = [i for i in range(len(got2)) if got[i] != got2[i] and i in inside]
         if got is None:
             print('%-12s no code file (status %d)' % (n, r.returncode))
             if r.stderr:
