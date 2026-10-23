@@ -2,7 +2,12 @@
    a block's identifiers and types are freed at its end by RELEASE(MARKP).
    On the P-System these are the P-machine's own (CSP 1 NEW, 32 MARK,
    33 RELEASE, 40 MEMAVAIL), as the Pascal compiler calls them -- not malloc,
-   whose free list a RELEASE would break.  On the host an arena with marks. */
+   whose free list a RELEASE would break.  On the host an arena with marks.
+
+   NEW does not clear what it gives, and the compiler leaves some bytes of
+   what it writes unset (the byte GENWORD skips to a word).  On the host new
+   memory is filled with the byte $PCFILL (0 if unset), so that two runs with
+   different fills show which bytes of the output depend on it (compare.py). */
 #include "compglbl.h"
 
 #ifdef __TINYC__
@@ -32,6 +37,7 @@ INTEGER MEMAVAIL(void)
 #define ARENA 200000
 static unsigned char arena[ARENA];
 static long used;
+static int fill = -1;
 #define HOSTMEM 20000                   /* the words a program has on BIGGY, about */
 
 void *PNEW(int bytes)
@@ -43,7 +49,9 @@ void *PNEW(int bytes)
         exit(2);
     }
     p = arena + used;
-    memset(p, 0, bytes);
+    if (fill < 0)
+        fill = getenv("PCFILL") ? strtol(getenv("PCFILL"), NULL, 0) & 255 : 0;
+    memset(p, fill, bytes);
     used += bytes;
     return p;
 }

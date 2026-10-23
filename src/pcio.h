@@ -26,5 +26,6 @@ void WINT(PFILE *f, INTEGER v, INTEGER width);  /* I:WIDTH (0: as wide as it is)
 void WCH(PFILE *f, CHAR c);
 void WLN(PFILE *f);                             /* WRITELN */
 CHAR RKEY(void);                                /* READ(KEYBOARD, CH) */
+void PTIME(INTEGER *HI, INTEGER *LO);           /* TIME(HI, LO): 60ths of a second */
 
 #endif

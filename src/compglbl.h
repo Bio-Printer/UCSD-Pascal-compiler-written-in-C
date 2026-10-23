@@ -326,6 +326,14 @@ void WRITECODE(BOOLEAN FORCEBUF);
 void BLOCK(SETOFSYS *FSYS);
 void FINISHSEG(void);
 
+/* the segment procedures */
+void PASCALCOMPILER(void);                      /* block.c: the compiler */
+void COMPINIT(void);                            /* compinit.c */
+void DECLARATIONPART(SETOFSYS *FSYS);          /* decpart.c */
+void BODYPART(SETOFSYS *FSYS, CTP FPROCP);      /* bodypart.c */
+void WRITELINKERINFO(BOOLEAN DECSTUFF);         /* unitpart.c */
+void UNITPART(SETOFSYS *FSYS);
+
 /* the interpreter's built-ins (builtin.c) */
 void IDSEARCH(void);                            /* the identifier at SYMBUFP^[SYMCURSOR] */
 INTEGER TREESEARCH(CTP ROOT, CTP *FOUND, CHAR *TARGET);

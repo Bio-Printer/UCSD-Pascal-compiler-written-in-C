@@ -88,7 +88,7 @@ def compile_one(name, out_dir):
     open(os.path.join(d, 'c.script'), 'w').write(script)
     r = subprocess.run([os.path.join(TINYC, 'build', 'run_verify'), os.path.join(d, 'data'), unit5,
                         os.path.join(d, 'S.BLK'), os.path.join(d, 'c.script'), 'native', os.path.join(d, 'out'),
-                        '', '1800'], capture_output=True, text=True)
+                        '', '1800'], capture_output=True, text=True, cwd=d)   # (its printer file goes there)
     tr = ''
     t = os.path.join(d, 'out', 'transcript.txt')
     if os.path.exists(t):

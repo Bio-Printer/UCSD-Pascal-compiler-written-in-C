@@ -11,8 +11,6 @@
 
 #pragma segment DECLARAT
 
-void DECLARATIONPART(SETOFSYS *FSYS);
-
 struct DECCTX {                         /* DECLARATIONPART's */
     SETOFSYS *FSYS;
     SYMBOL LSY;
