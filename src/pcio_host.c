@@ -15,7 +15,7 @@
 struct PFILE {
     FILE *fp;
     long pos;                           /* text written so far, the header included */
-    BOOLEAN isnew;
+    BOOLEAN isnew, text;
     char name[80];
 };
 
@@ -38,7 +38,7 @@ static void hostname(CHAR *name, char *out)
     out[j] = 0;
 }
 
-static PFILE *popen_(CHAR *name, const char *mode, BOOLEAN isnew)
+static PFILE *popen_(CHAR *name, const char *mode, BOOLEAN isnew, BOOLEAN text)
 {
     PFILE *f;
     char n[80];
@@ -49,8 +49,9 @@ static PFILE *popen_(CHAR *name, const char *mode, BOOLEAN isnew)
     f = calloc(1, sizeof *f);
     f->fp = fp;
     f->isnew = isnew;
+    f->text = text;
     strcpy(f->name, n);
-    if (isnew) {                        /* (a text file's header: zeros, as the OS writes it) */
+    if (text) {                         /* (a text file's header: zeros, as the OS writes it) */
         static char zero[1024];
         fwrite(zero, 1, 1024, fp);
         f->pos = 1024;
@@ -60,13 +61,13 @@ static PFILE *popen_(CHAR *name, const char *mode, BOOLEAN isnew)
 
 PFILE *POPENOLD(CHAR *name)
 {
-    PFILE *f = popen_(name, "r+b", FALSE);
-    return f ? f : popen_(name, "rb", FALSE);
+    PFILE *f = popen_(name, "r+b", FALSE, FALSE);
+    return f ? f : popen_(name, "rb", FALSE, FALSE);
 }
 
-PFILE *POPENNEW(CHAR *name)
+PFILE *POPENNEW(CHAR *name, BOOLEAN text)
 {
-    return popen_(name, "w+b", TRUE);
+    return popen_(name, "w+b", TRUE, text);
 }
 
 void PCLOSE(PFILE *f, BOOLEAN lock)
@@ -78,7 +79,7 @@ void PCLOSE(PFILE *f, BOOLEAN lock)
         fclose(f->fp);
         remove(f->name);
     } else {
-        if (f->isnew && f->pos > 1024) {        /* (its last page filled) */
+        if (f->text && f->pos > 1024) {        /* (its last page filled) */
             fseek(f->fp, f->pos, SEEK_SET);
             if (f->pos % 512)
                 fwrite(zero, 1, 512 - f->pos % 512, f->fp);

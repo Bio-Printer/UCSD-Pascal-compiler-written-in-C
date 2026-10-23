@@ -18,7 +18,7 @@
 
 /* ======================== BODYPART.A: the code generator ======================== */
 
-static void LINKERREF(IDCLASS KLASS, INTEGER ID, INTEGER ADDR)
+static void LINKERREF(IDCLASS KLASS, INTEGER FID, INTEGER ADDR)
 {
     if (NREFS > REFSPERBLK) {                   /* write the buffer */
         if (PBLOCKWRITE(REFFILE, &(*REFLIST)[1], 1, REFBLK) != 1)
@@ -27,9 +27,9 @@ static void LINKERREF(IDCLASS KLASS, INTEGER ID, INTEGER ADDR)
         NREFS = 1;
     }
     if (IN(KLASS, &VARS))
-        (*REFLIST)[NREFS].KEY = ID + 32;
+        (*REFLIST)[NREFS].KEY = FID + 32;
     else                                        /* PROC */
-        (*REFLIST)[NREFS].KEY = ID;
+        (*REFLIST)[NREFS].KEY = FID;
     (*REFLIST)[NREFS].OFFSET = SEGINX + ADDR;
     NREFS = NREFS + 1;
 }
@@ -656,7 +656,7 @@ static void STRGVAR(SETOFSYS *FSYS, BOOLEAN MUSTBEVAR)
                     SCONST->U.S.SLGTH = 1;
                     SCONST->U.S.SVAL[1] = GATTR.CVAL.IVAL;
                     GATTR.CVAL.VALP = SCONST;
-                    GATTR.TYPTR = PNEW(sizeof(struct STRUCTURE));   /* NEW(TYPTR, ARRAYS, TRUE, TRUE) */
+                    GATTR.TYPTR = NEWTYPE(AR);   /* NEW(TYPTR, ARRAYS, TRUE, TRUE) */
                     *GATTR.TYPTR = *STRGPTR;
                     GATTR.TYPTR->U.AR.MAXLENG = 1;
                 }
@@ -857,7 +857,7 @@ static void CONCAT(struct CALLCTX *c)
     if (LC > LCMAX)
         LCMAX = LC;
     LC = LLC;
-    GATTR.TYPTR = PNEW(sizeof(struct STRUCTURE));   /* NEW(TYPTR, ARRAYS, TRUE, TRUE) */
+    GATTR.TYPTR = NEWTYPE(AR);   /* NEW(TYPTR, ARRAYS, TRUE, TRUE) */
     *GATTR.TYPTR = *STRGPTR;
     GATTR.TYPTR->U.AR.MAXLENG = TEMPLGTH;
 }
@@ -1764,7 +1764,7 @@ static void FACTOR(SETOFSYS *FSYS)
             if (LGTH == 1)
                 GATTR.TYPTR = CHARPTR;
             else {
-                LSP = PNEW(sizeof(struct STRUCTURE));   /* NEW(LSP, ARRAYS, TRUE, TRUE) */
+                LSP = NEWTYPE(AR);   /* NEW(LSP, ARRAYS, TRUE, TRUE) */
                 *LSP = *STRGPTR;
                 LSP->U.AR.MAXLENG = LGTH;
                 GATTR.TYPTR = LSP;
@@ -1774,7 +1774,7 @@ static void FACTOR(SETOFSYS *FSYS)
             INSYMBOL();
             break;
         case LONGCONST:
-            LSP = PNEW(sizeof(struct STRUCTURE));       /* NEW(LSP, LONGINT) */
+            LSP = NEWTYPE0();       /* NEW(LSP, LONGINT) */
             *LSP = *LONGINTPTR;
             LSP->SIZE = DECSIZE(LGTH);
             GATTR.TYPTR = LSP;
@@ -1809,7 +1809,7 @@ static void FACTOR(SETOFSYS *FSYS)
             INSYMBOL();
             memset(CSTPART, 0, sizeof CSTPART);
             VARPART = FALSE;
-            LSP = PNEW(sizeof(struct STRUCTURE));       /* NEW(LSP, POWER) */
+            LSP = NEWTYPE(ELSET);       /* NEW(LSP, POWER) */
             LSP->U.ELSET = NULL;
             LSP->SIZE = 0;
             LSP->FORM = POWER;

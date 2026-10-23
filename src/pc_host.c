@@ -39,7 +39,7 @@ int main(int argc, char **argv)
         fprintf(stderr, "pc: no %s\n", argv[1]);
         return 2;
     }
-    USERINFO.WORKCODE = POPENNEW(pstr(argv[2], n));
+    USERINFO.WORKCODE = POPENNEW(pstr(argv[2], n), FALSE);
     if (USERINFO.WORKCODE == NULL) {
         fprintf(stderr, "pc: cannot write %s\n", argv[2]);
         return 2;

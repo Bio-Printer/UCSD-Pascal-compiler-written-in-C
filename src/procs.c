@@ -288,11 +288,11 @@ static BOOLEAN COMMENTER(CHAR STOPPER)
                         LIST = SW == '+';
                         if (LIST) {
                             static CHAR LST[] = "\020*SYSTEM.LST.TEXT";
-                            LP = POPENNEW(LST);
+                            LP = POPENNEW(LST, TRUE);
                         }
                     } else {
                         SCANSTRING(LTITLE, 40, STOPPER);
-                        LP = POPENNEW(LTITLE);
+                        LP = POPENNEW(LTITLE, TRUE);
                         LIST = LP != NULL;
                         return FALSE;
                     }
@@ -451,7 +451,7 @@ static void NUMBER(void)
                 IPART = ENDI;
                 K = ENDI;
             }
-            LVP = PNEW(sizeof(struct CONSTREC));        /* NEW(LVP, LONG) */
+            LVP = NEWCONST(L);        /* NEW(LVP, LONG) */
             LVP->CCLASS = LONG;
             J = 4;
             LVP->U.L.LLENG = 0;
@@ -491,7 +491,7 @@ static void NUMBER(void)
             RSUM = RMUL(RSUM, RPOT(EXPONENT));
         SY = REALCONST;
         OP = NOOP;
-        LVP = PNEW(sizeof(struct CONSTREC));            /* NEW(LVP, REEL) */
+        LVP = NEWCONST(RVAL);            /* NEW(LVP, REEL) */
         LVP->CCLASS = REEL;
         LVP->U.RVAL = RSUM;
         VAL.VALP = LVP;
@@ -739,7 +739,7 @@ void CONSTANT(SETOFSYS *FSYS, STP *FSP, VALU *FVALU)
             if (LGTH == 1)
                 LSP = CHARPTR;
             else {
-                LSP = PNEW(sizeof(struct STRUCTURE));   /* NEW(LSP, ARRAYS, TRUE, TRUE) */
+                LSP = NEWTYPE(AR);   /* NEW(LSP, ARRAYS, TRUE, TRUE) */
                 *LSP = *STRGPTR;
                 LSP->U.AR.MAXLENG = LGTH;
                 LSP->U.AR.INXTYPE = NULL;
@@ -768,14 +768,14 @@ void CONSTANT(SETOFSYS *FSYS, STP *FSP, VALU *FVALU)
                             FVALU->IVAL = -FVALU->IVAL;
                     } else if (LSP == REALPTR) {
                         if (SIGN == 2) {
-                            LVP = PNEW(sizeof(struct CONSTREC));    /* NEW(LVP, REEL) */
+                            LVP = NEWCONST(RVAL);    /* NEW(LVP, REEL) */
                             LVP->CCLASS = REEL;
                             LVP->U.RVAL = RNEG(FVALU->VALP->U.RVAL);
                             FVALU->VALP = LVP;
                         }
                     } else if (COMPTYPES(LSP, LONGINTPTR)) {
                         if (SIGN == 2) {
-                            LVP = PNEW(sizeof(struct CONSTREC));    /* NEW(LVP, LONG) */
+                            LVP = NEWCONST(L);    /* NEW(LVP, LONG) */
                             LVP->CCLASS = LONG;
                             LVP->U.L.LONGVAL[1] = -FVALU->VALP->U.L.LONGVAL[1];
                             FVALU->VALP = LVP;
@@ -799,7 +799,7 @@ void CONSTANT(SETOFSYS *FSYS, STP *FSP, VALU *FVALU)
             } else if (SY == LONGCONST) {
                 if (SIGN == 2) {                        /* (only a negative one: as the Pascal does) */
                     VAL.VALP->U.L.LONGVAL[1] = -VAL.VALP->U.L.LONGVAL[1];
-                    LSP = PNEW(sizeof(struct STRUCTURE));   /* NEW(LSP, LONGINT) */
+                    LSP = NEWTYPE0();   /* NEW(LSP, LONGINT) */
                     LSP->SIZE = DECSIZE(LGTH);
                     LSP->FORM = LONGINT;
                     *FVALU = VAL;

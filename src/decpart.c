@@ -19,16 +19,6 @@ struct DECCTX {                         /* DECLARATIONPART's */
 
 #define ALPHAEQ(a, b) (memcmp(a, b, 8) == 0)
 
-static STP newtype(void)
-{
-    return PNEW(sizeof(struct STRUCTURE));
-}
-
-static CTP newid(void)
-{
-    return PNEW(sizeof(struct IDENTIFIER));
-}
-
 /* ======================== DECPART.A: TYP ======================== */
 
 struct TYPCTX {                         /* TYP's */
@@ -64,7 +54,7 @@ static void SIMPLETYPE(SETOFSYS *FSYS, STP *FSP, ADDRRANGE *FSIZE)
             TTOP = TOP;
             while (DISPLAY[TOP].OCCUR != BLCK)
                 TOP = TOP - 1;
-            LSP = newtype();                    /* NEW(LSP, SCALAR, DECLARED) */
+            LSP = NEWTYPE(SC);                    /* NEW(LSP, SCALAR, DECLARED) */
             LSP->SIZE = INTSIZE;
             LSP->FORM = SCALAR;
             LSP->U.SC.SCALKIND = DECLARED;
@@ -73,7 +63,7 @@ static void SIMPLETYPE(SETOFSYS *FSYS, STP *FSP, ADDRRANGE *FSIZE)
             do {
                 INSYMBOL();
                 if (SY == IDENT) {
-                    LCP = newid();              /* NEW(LCP, KONST) */
+                    LCP = NEWID(VALUES);              /* NEW(LCP, KONST) */
                     memcpy(LCP->NAME, ID, 8);
                     LCP->IDTYPE = LSP;
                     LCP->NEXT = LCP1;
@@ -101,7 +91,7 @@ static void SIMPLETYPE(SETOFSYS *FSYS, STP *FSP, ADDRRANGE *FSIZE)
                 SEARCHID(SETOF(&s, TYPES, KONST, -1), &LCP);
                 INSYMBOL();
                 if (LCP->KLASS == KONST) {
-                    LSP = newtype();            /* NEW(LSP, SUBRANGE) */
+                    LSP = NEWTYPE(SR);            /* NEW(LSP, SUBRANGE) */
                     LSP->U.SR.RANGETYPE = LCP->IDTYPE;
                     LSP->FORM = SUBRANGE;
                     if (STRGTYPE(LSP->U.SR.RANGETYPE)) {
@@ -129,7 +119,7 @@ static void SIMPLETYPE(SETOFSYS *FSYS, STP *FSP, ADDRRANGE *FSIZE)
                                 LVALU.IVAL = DEFSTRGLGTH;
                             }
                             if (LVALU.IVAL != DEFSTRGLGTH) {
-                                LSP = newtype();    /* NEW(LSP, ARRAYS, TRUE, TRUE) */
+                                LSP = NEWTYPE(AR);    /* NEW(LSP, ARRAYS, TRUE, TRUE) */
                                 *LSP = *STRGPTR;
                                 LSP->U.AR.MAXLENG = LVALU.IVAL;
                                 LSP->SIZE = (LVALU.IVAL + CHRSPERWD) / CHRSPERWD;
@@ -145,7 +135,7 @@ static void SIMPLETYPE(SETOFSYS *FSYS, STP *FSP, ADDRRANGE *FSIZE)
                            test is under LSP = INTPTR, so it is never true) */
                         if (SY == LBRACK) {
                             INSYMBOL();
-                            LSP = newtype();        /* NEW(LSP, LONGINT) */
+                            LSP = NEWTYPE0();        /* NEW(LSP, LONGINT) */
                             *LSP = *LONGINTPTR;
                             CONSTANT(SETADD(&s, FSYS, RBRACK, -1), &LSP1, &LVALU);
                             if (LSP1 == INTPTR) {
@@ -169,7 +159,7 @@ static void SIMPLETYPE(SETOFSYS *FSYS, STP *FSP, ADDRRANGE *FSIZE)
                         *FSIZE = LSP->SIZE;
                 }
             } else {                            /* (SY = IDENT) */
-                LSP = newtype();                /* NEW(LSP, SUBRANGE) */
+                LSP = NEWTYPE(SR);                /* NEW(LSP, SUBRANGE) */
                 LSP->FORM = SUBRANGE;
                 CONSTANT(SETADD(&s, FSYS, COLON, -1), &LSP1, &LVALU);
                 if (STRGTYPE(LSP1)) {
@@ -301,14 +291,14 @@ static void VARIANTLIST(struct FLCTX *f)
     struct TYPCTX *t = f->t;
     BOOLEAN GOTTAGNAME;
     SETS s, u;
-    f->LSP = newtype();                         /* NEW(LSP, TAGFLD) */
+    f->LSP = NEWTYPE(TF);                         /* NEW(LSP, TAGFLD) */
     f->LSP->U.TF.TAGFIELDP = NULL;
     f->LSP->U.TF.FSTVAR = NULL;
     f->LSP->FORM = TAGFLD;
     *f->FRECVAR = f->LSP;
     INSYMBOL();
     if (SY == IDENT) {
-        f->LCP = newid();                       /* NEW(LCP, FIELD, PACKING) */
+        f->LCP = NEWID(F);                       /* NEW(LCP, FIELD, PACKING) */
         f->LCP->IDTYPE = NULL;
         f->LCP->KLASS = FIELD;
         f->LCP->NEXT = NULL;
@@ -367,7 +357,7 @@ static void VARIANTLIST(struct FLCTX *f)
             if (f->LSP->U.TF.TAGFIELDP != NULL)
                 if (!COMPTYPES(f->LSP->U.TF.TAGFIELDP->IDTYPE, f->LSP3))
                     ERROR(111);
-            f->LSP3 = newtype();                /* NEW(LSP3, VARIANT) */
+            f->LSP3 = NEWTYPE(VA);                /* NEW(LSP3, VARIANT) */
             f->LSP3->U.VA.NXTVAR = f->LSP1;
             f->LSP3->U.VA.SUBVAR = f->LSP2;
             f->LSP3->U.VA.VARVAL = f->LVALU;
@@ -440,7 +430,7 @@ static void FIELDLIST(struct TYPCTX *t, SETOFSYS *FSYS, STP *FRECVAR)
         f->NXT = f->NXT1;
         do {
             if (SY == IDENT) {
-                f->LCP = newid();               /* NEW(LCP, FIELD, PACKING) */
+                f->LCP = NEWID(F);               /* NEW(LCP, FIELD, PACKING) */
                 memcpy(f->LCP->NAME, ID, 8);
                 f->LCP->IDTYPE = NULL;
                 f->LCP->NEXT = f->NXT;
@@ -501,7 +491,7 @@ static void FIELDLIST(struct TYPCTX *t, SETOFSYS *FSYS, STP *FRECVAR)
 static void POINTERTYPE(struct TYPCTX *t)
 {
     SETS s;
-    t->LSP = newtype();                         /* NEW(LSP, POINTER) */
+    t->LSP = NEWTYPE(ELTYPE);                         /* NEW(LSP, POINTER) */
     *t->FSP = t->LSP;
     t->LSP->U.ELTYPE = NULL;
     t->LSP->SIZE = PTRSIZE;
@@ -512,7 +502,7 @@ static void POINTERTYPE(struct TYPCTX *t)
         SEARCHID(SETOF(&s, TYPES, -1), &t->LCP);
         PRTERR = TRUE;
         if (t->LCP == NULL) {                   /* a forward referenced type id */
-            t->LCP = newid();                   /* NEW(LCP, TYPES) */
+            t->LCP = NEWID0();                   /* NEW(LCP, TYPES) */
             memcpy(t->LCP->NAME, ID, 8);
             t->LCP->IDTYPE = t->LSP;
             t->LCP->NEXT = FWPTR;
@@ -565,7 +555,7 @@ static void TYP(struct DECCTX *d, SETOFSYS *FSYS, STP *FSP, ADDRRANGE *FSIZE)
                     ERROR(11);
                 t->LSP1 = NULL;
                 do {
-                    t->LSP = newtype();         /* NEW(LSP, ARRAYS, PACKING ...) */
+                    t->LSP = NEWTYPE(AR);         /* NEW(LSP, ARRAYS, PACKING ...) */
                     t->LSP->U.AR.AELTYPE = t->LSP1;
                     t->LSP->U.AR.INXTYPE = NULL;
                     if (t->PACKING)
@@ -648,7 +638,7 @@ static void TYP(struct DECCTX *d, SETOFSYS *FSYS, STP *FSP, ADDRRANGE *FSIZE)
                     FIELDLIST(t, SETADD(&b, SETMINUS(&s, FSYS, &a), ENDSY, -1), &t->LSP1);
                 }
                 t->DISPL = t->DISPL + (t->NEXTBIT > 0);
-                t->LSP = newtype();             /* NEW(LSP, RECORDS) */
+                t->LSP = NEWTYPE(RE);             /* NEW(LSP, RECORDS) */
                 t->LSP->U.RE.FSTFLD = DISPLAY[TOP].FNAME;
                 t->LSP->U.RE.RECVAR = t->LSP1;
                 t->LSP->SIZE = t->DISPL;
@@ -674,7 +664,7 @@ static void TYP(struct DECCTX *d, SETOFSYS *FSYS, STP *FSP, ADDRRANGE *FSIZE)
                         t->LSP1 = NULL;
                     }
                 }
-                t->LSP = newtype();             /* NEW(LSP, POWER) */
+                t->LSP = NEWTYPE(ELSET);             /* NEW(LSP, POWER) */
                 t->LSP->U.ELSET = t->LSP1;
                 t->LSP->FORM = POWER;
                 if (t->LSP1 != NULL) {
@@ -691,7 +681,7 @@ static void TYP(struct DECCTX *d, SETOFSYS *FSYS, STP *FSP, ADDRRANGE *FSIZE)
                     if (!ININTERFACE)
                         ERROR(191);             /* no private files */
                 INSYMBOL();
-                t->LSP = newtype();             /* NEW(LSP, FILES) */
+                t->LSP = NEWTYPE(FILTYPE);             /* NEW(LSP, FILES) */
                 t->LSP->FORM = FILES;
                 t->LSP->U.FILTYPE = NULL;
                 if (SY == OFSY) {
@@ -877,7 +867,7 @@ static void USESDECLARATION(struct DECCTX *d, BOOLEAN MAGIC)
             LLEXSTK.SOLDPROC = NEXTPROC;
             GETTEXT(u, &FOUND);
             if (FOUND) {
-                LCP = newid();                  /* NEW(LCP, MODULE) */
+                LCP = NEWID(SEGID);                  /* NEW(LCP, MODULE) */
                 memcpy(LCP->NAME, u->LNAME, 8);
                 LCP->NEXT = USINGLIST;
                 LCP->IDTYPE = NULL;
@@ -982,7 +972,7 @@ static void CONSTDECLARATION(struct DECCTX *d)
         SKIP(SETADD(&s, d->FSYS, IDENT, -1));
     }
     while (SY == IDENT) {
-        LCP = newid();                          /* NEW(LCP, KONST) */
+        LCP = NEWID(VALUES);                          /* NEW(LCP, KONST) */
         memcpy(LCP->NAME, ID, 8);
         LCP->IDTYPE = NULL;
         LCP->NEXT = NULL;
@@ -1019,7 +1009,7 @@ static void TYPEDECLARATION(struct DECCTX *d)
         SKIP(SETADD(&s, d->FSYS, IDENT, -1));
     }
     while (SY == IDENT) {
-        LCP = newid();                          /* NEW(LCP, TYPES) */
+        LCP = NEWID0();                          /* NEW(LCP, TYPES) */
         memcpy(LCP->NAME, ID, 8);
         LCP->IDTYPE = NULL;
         LCP->KLASS = TYPES;
@@ -1068,7 +1058,7 @@ static void VARDECLARATION(struct DECCTX *d)
     do {
         do {
             if (SY == IDENT) {
-                LCP = newid();                  /* NEW(LCP, ACTUALVARS, INMODULE) */
+                LCP = NEWID(V);                  /* NEW(LCP, ACTUALVARS, INMODULE) */
                 memcpy(LCP->NAME, ID, 8);
                 LCP->NEXT = NXT;
                 LCP->KLASS = ACTUALVARS;
@@ -1169,7 +1159,7 @@ static void PARAMETERLIST(struct PDCTX *p, SETOFSYS *FSY, CTP *FPAR, CTP FCP)
                 if (SY != IDENT)
                     ERROR(2);
                 else {
-                    LCP = newid();              /* NEW(LCP, FORMALVARS, FALSE): may be ACTUAL (the same size) */
+                    LCP = NEWID(V);              /* NEW(LCP, FORMALVARS, FALSE): may be ACTUAL (the same size) */
                     memcpy(LCP->NAME, ID, 8);
                     LCP->IDTYPE = NULL;
                     LCP->NEXT = LCP2;
@@ -1330,7 +1320,7 @@ static void PROCDECLARATION(struct DECCTX *d, SYMBOL FSY, BOOLEAN SEGDEC)
                 p->FORW = FALSE;
         }
         if (!p->FORW) {
-            LCP = newid();                      /* NEW(LCP, PROC/FUNC, DECLARED, ACTUAL, INMODULE) */
+            LCP = NEWID(P);                      /* NEW(LCP, PROC/FUNC, DECLARED, ACTUAL, INMODULE) */
             memcpy(LCP->NAME, ID, 8);
             LCP->IDTYPE = NULL;
             LCP->U.P.LOCALLC = LC;

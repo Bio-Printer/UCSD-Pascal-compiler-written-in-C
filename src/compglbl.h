@@ -8,7 +8,7 @@
 #define COMPGLBL_H
 
 #ifdef __TINYC__
-#include <stdio.h>
+#include <stddef.h>
 #include <string.h>
 #include <setjmp.h>
 typedef int INTEGER;
@@ -228,10 +228,19 @@ extern ADDRRANGE LC, IC;
 extern BOOLEAN TEST;
 extern STP INTPTR;
 extern SEGRANGE SEG;
-extern CURSRANGE SYMCURSOR;             /* the scanner's: SYMCURSOR, SY, OP, ID (IDSEARCH) */
-extern SYMBOL SY;
-extern OPERATOR OP;
-extern ALPHA ID;
+/* the scanner's: IDSEARCH (the interpreter's, CSP 7, on the P-System) writes
+   SY, OP and ID after SYMCURSOR, as the Pascal compiler's globals are */
+struct SCANNER {
+    CURSRANGE SYMCURSOR;
+    SYMBOL SY;
+    OPERATOR OP;
+    ALPHA ID;
+};
+extern struct SCANNER SCAN_;
+#define SYMCURSOR SCAN_.SYMCURSOR
+#define SY SCAN_.SY
+#define OP SCAN_.OP
+#define ID SCAN_.ID
 extern INTEGER LGTH;
 extern VALU VAL;
 extern DISPRANGE DISX;
@@ -335,7 +344,11 @@ void WRITELINKERINFO(BOOLEAN DECSTUFF);         /* unitpart.c */
 void UNITPART(SETOFSYS *FSYS);
 
 /* the interpreter's built-ins (builtin.c) */
-void IDSEARCH(void);                            /* the identifier at SYMBUFP^[SYMCURSOR] */
+#ifdef __TINYC__
+#define IDSEARCH() __cspv(7, &SYMCURSOR, SYMBUFP)   /* the identifier at SYMBUFP^[SYMCURSOR] */
+#else
+void IDSEARCH(void);
+#endif
 INTEGER TREESEARCH(CTP ROOT, CTP *FOUND, CHAR *TARGET);
 INTEGER SCAN(INTEGER LIMIT, BOOLEAN NE, CHAR CH, CHAR *P);  /* SCAN(LIMIT, =CH or <>CH, P^) */
 
@@ -366,6 +379,14 @@ BOOLEAN RLT(REAL a, REAL b);
 #endif
 
 /* NEW, MARK, RELEASE (heap.c) */
+/* NEW(P, tag ...): the fixed part and one variant (U, last), as the Pascal
+   allocates a record; NEWID0, NEWTYPE0: a variant without fields */
+#define NEWVAR(T, v) PNEW(sizeof(T) - sizeof(((T *)0)->U) + sizeof(((T *)0)->U.v))
+#define NEWID(v) ((CTP)NEWVAR(struct IDENTIFIER, v))
+#define NEWID0() ((CTP)PNEW(sizeof(struct IDENTIFIER) - sizeof(((struct IDENTIFIER *)0)->U)))
+#define NEWTYPE(v) ((STP)NEWVAR(struct STRUCTURE, v))
+#define NEWTYPE0() ((STP)PNEW(sizeof(struct STRUCTURE) - sizeof(((struct STRUCTURE *)0)->U)))
+#define NEWCONST(v) ((CSP)NEWVAR(struct CONSTREC, v))
 void *PNEW(int bytes);
 void PMARK(void **p);
 void PRELEASE(void *p);

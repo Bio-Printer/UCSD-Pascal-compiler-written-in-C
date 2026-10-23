@@ -5,16 +5,6 @@
 
 #pragma segment COMPINIT
 
-static STP newtype(void)
-{
-    return PNEW(sizeof(struct STRUCTURE));
-}
-
-static CTP newid(void)
-{
-    return PNEW(sizeof(struct IDENTIFIER));
-}
-
 static void setname(CTP cp, const char *name)
 {
     memcpy(cp->NAME, name, 8);
@@ -22,23 +12,23 @@ static void setname(CTP cp, const char *name)
 
 static void ENTSTDTYPES(void)
 {
-    INTPTR = newtype();                         /* NEW(INTPTR, SCALAR, STANDARD) */
+    INTPTR = NEWTYPE(SC);                         /* NEW(INTPTR, SCALAR, STANDARD) */
     INTPTR->SIZE = INTSIZE; INTPTR->FORM = SCALAR; INTPTR->U.SC.SCALKIND = STANDARD;
-    REALPTR = newtype();
+    REALPTR = NEWTYPE(SC);
     REALPTR->SIZE = REALSIZE; REALPTR->FORM = SCALAR; REALPTR->U.SC.SCALKIND = STANDARD;
-    LONGINTPTR = newtype();
+    LONGINTPTR = NEWTYPE0();
     LONGINTPTR->SIZE = DECSIZE((BITSPERWD - 1) * 100 / 332 + 1); LONGINTPTR->FORM = LONGINT;
-    CHARPTR = newtype();
+    CHARPTR = NEWTYPE(SC);
     CHARPTR->SIZE = CHARSIZE; CHARPTR->FORM = SCALAR; CHARPTR->U.SC.SCALKIND = STANDARD;
-    BOOLPTR = newtype();
+    BOOLPTR = NEWTYPE(SC);
     BOOLPTR->SIZE = BOOLSIZE; BOOLPTR->FORM = SCALAR; BOOLPTR->U.SC.SCALKIND = DECLARED;
-    NILPTR = newtype();
+    NILPTR = NEWTYPE(ELTYPE);
     NILPTR->SIZE = PTRSIZE; NILPTR->FORM = POINTER; NILPTR->U.ELTYPE = NULL;
-    TEXTPTR = newtype();
+    TEXTPTR = NEWTYPE(FILTYPE);
     TEXTPTR->SIZE = FILESIZE + CHARSIZE; TEXTPTR->FORM = FILES; TEXTPTR->U.FILTYPE = CHARPTR;
-    INTRACTVPTR = newtype();
+    INTRACTVPTR = NEWTYPE(FILTYPE);
     INTRACTVPTR->SIZE = FILESIZE + CHARSIZE; INTRACTVPTR->FORM = FILES; INTRACTVPTR->U.FILTYPE = CHARPTR;
-    STRGPTR = newtype();                        /* NEW(STRGPTR, ARRAYS, TRUE, TRUE) */
+    STRGPTR = NEWTYPE(AR);                        /* NEW(STRGPTR, ARRAYS, TRUE, TRUE) */
     STRGPTR->FORM = ARRAYS; STRGPTR->SIZE = (DEFSTRGLGTH + CHRSPERWD) / CHRSPERWD;
     STRGPTR->U.AR.AISPACKD = TRUE; STRGPTR->U.AR.AISSTRNG = TRUE; STRGPTR->U.AR.INXTYPE = INTPTR;
     STRGPTR->U.AR.ELWIDTH = BITSPERCHR; STRGPTR->U.AR.ELSPERWD = CHRSPERWD;
@@ -47,7 +37,7 @@ static void ENTSTDTYPES(void)
 
 static void ENTTYPE(const char *name, STP t)
 {
-    CTP cp = newid();
+    CTP cp = NEWID0();                          /* NEW(CP, TYPES) */
     setname(cp, name);
     cp->IDTYPE = t;
     cp->KLASS = TYPES;
@@ -56,7 +46,7 @@ static void ENTTYPE(const char *name, STP t)
 
 static CTP ENTFILE(const char *name, INTEGER addr)
 {
-    CTP cp = newid();                           /* NEW(CP, FORMALVARS, FALSE) */
+    CTP cp = NEWID(V);                          /* NEW(CP, FORMALVARS, FALSE) */
     setname(cp, name);
     cp->IDTYPE = TEXTPTR;
     cp->KLASS = FORMALVARS;
@@ -82,7 +72,7 @@ static void ENTSTDNAMES(void)
     ENTFILE("KEYBOARD", 4);
     CP1 = NULL;
     for (I = 0; I <= 1; I++) {
-        CP = newid();                           /* NEW(CP, KONST) */
+        CP = NEWID(VALUES);                     /* NEW(CP, KONST) */
         CP->IDTYPE = BOOLPTR;
         if (I == 0)
             setname(CP, "FALSE   ");
@@ -95,14 +85,14 @@ static void ENTSTDNAMES(void)
         CP1 = CP;
     }
     BOOLPTR->U.SC.FCONST = CP;
-    CP = newid();
+    CP = NEWID(VALUES);                         /* NEW(CP, KONST) */
     setname(CP, "NIL     ");
     CP->IDTYPE = NILPTR;
     CP->NEXT = NULL;
     CP->U.VALUES.IVAL = 0;
     CP->KLASS = KONST;
     ENTERID(CP);
-    CP = newid();
+    CP = NEWID(VALUES);                         /* NEW(CP, KONST) */
     setname(CP, "MAXINT  ");
     CP->IDTYPE = INTPTR;
     CP->KLASS = KONST;
@@ -110,9 +100,8 @@ static void ENTSTDNAMES(void)
     ENTERID(CP);
 }
 
-static CTP undecl(IDCLASS klass)
+static CTP undecl(CTP cp, IDCLASS klass)
 {
-    CTP cp = newid();
     setname(cp, "        ");
     cp->IDTYPE = NULL;
     cp->NEXT = NULL;
@@ -122,16 +111,16 @@ static CTP undecl(IDCLASS klass)
 
 static void ENTUNDECL(void)
 {
-    UTYPPTR = undecl(TYPES);
-    UCSTPTR = undecl(KONST);
+    UTYPPTR = undecl(NEWID0(), TYPES);
+    UCSTPTR = undecl(NEWID(VALUES), KONST);
     UCSTPTR->U.VALUES.IVAL = 0;
-    UVARPTR = undecl(ACTUALVARS);
+    UVARPTR = undecl(NEWID(V), ACTUALVARS);
     UVARPTR->U.V.VLEV = 0;
     UVARPTR->U.V.VADDR = 0;
-    UFLDPTR = undecl(FIELD);
+    UFLDPTR = undecl(NEWID(F), FIELD);
     UFLDPTR->U.F.FLDADDR = 0;
-    UPRCPTR = undecl(PROC);
-    UFCTPTR = undecl(FUNC);
+    UPRCPTR = undecl(NEWID(P), PROC);
+    UFCTPTR = undecl(NEWID(P), FUNC);
     UPRCPTR->U.P.FORWDECL = UFCTPTR->U.P.FORWDECL = FALSE;
     UPRCPTR->U.P.INSCOPE = UFCTPTR->U.P.INSCOPE = FALSE;
     UPRCPTR->U.P.LOCALLC = UFCTPTR->U.P.LOCALLC = 0;
@@ -145,15 +134,17 @@ static void ENTUNDECL(void)
 
 static void ENTSPCPROCS(void)
 {
-    static const char NA[43][9] = {
-        "READ    ", "READLN  ", "WRITE   ", "WRITELN ", "EOF     ", "EOLN    ",
-        "PRED    ", "SUCC    ", "ORD     ", "SQR     ", "ABS     ", "NEW     ",
-        "UNITREAD", "UNITWRIT", "CONCAT  ", "LENGTH  ", "INSERT  ", "DELETE  ",
-        "COPY    ", "POS     ", "MOVELEFT", "MOVERIGH", "EXIT    ", "IDSEARCH",
-        "TREESEAR", "TIME    ", "FILLCHAR", "OPENNEW ", "OPENOLD ", "REWRITE ",
-        "CLOSE   ", "SEEK    ", "RESET   ", "GET     ", "PUT     ", "SCAN    ",
-        "BLOCKREA", "BLOCKWRI", "TRUNC   ", "PAGE    ", "SIZEOF  ", "STR     ",
-        "GOTOXY  " };
+    /* the names, 8 characters each (literals: in this segment's code) */
+    const char *NA1 =
+        "READ    READLN  WRITE   WRITELN EOF     EOLN    "
+        "PRED    SUCC    ORD     SQR     ABS     NEW     "
+        "UNITREADUNITWRITCONCAT  LENGTH  INSERT  DELETE  "
+        "COPY    POS     MOVELEFTMOVERIGHEXIT    IDSEARCH"
+        "TREESEARTIME    FILLCHAROPENNEW OPENOLD REWRITE "
+        "CLOSE   ";
+    const char *NA2 =
+        "SEEK    RESET   GET     PUT     SCAN    BLOCKREA"
+        "BLOCKWRITRUNC   PAGE    SIZEOF  STR     GOTOXY  ";
     SETS tinyset, funcs;
     CTP LCP;
     INTEGER I;
@@ -165,8 +156,8 @@ static void ENTSPCPROCS(void)
             if (IN(I, &tinyset))
                 continue;                       /* GOTO 1 */
         ISFUNC = IN(I, &funcs);
-        LCP = newid();                          /* NEW(LCP, FUNC/PROC, SPECIAL) */
-        memcpy(LCP->NAME, NA[I - 1], 8);
+        LCP = NEWID(P);                         /* NEW(LCP, FUNC/PROC, SPECIAL) */
+        memcpy(LCP->NAME, I <= 31 ? NA1 + 8 * (I - 1) : NA2 + 8 * (I - 32), 8);
         LCP->NEXT = NULL;
         LCP->IDTYPE = NULL;
         LCP->KLASS = ISFUNC ? FUNC : PROC;
@@ -178,11 +169,12 @@ static void ENTSPCPROCS(void)
 
 static void ENTSTDPROCS(void)
 {
-    static const char NA[19][9] = {
-        "ODD     ", "CHR     ", "MEMAVAIL", "ROUND   ", "SIN     ", "COS     ",
-        "LOG     ", "ATAN    ", "LN      ", "EXP     ", "SQRT    ", "MARK    ",
-        "RELEASE ", "IORESULT", "UNITBUSY", "PWROFTEN", "UNITWAIT", "UNITCLEA",
-        "HALT    " };
+    /* the names, 8 characters each (a literal: in this segment's code) */
+    const char *NA =
+        "ODD     CHR     MEMAVAILROUND   SIN     COS     "
+        "LOG     ATAN    LN      EXP     SQRT    MARK    "
+        "RELEASE IORESULTUNITBUSYPWROFTENUNITWAITUNITCLEA"
+        "HALT    ";
     SETS procs;
     CTP LCP, PARAM;
     STP LSP, FTYPE;
@@ -196,7 +188,7 @@ static void ENTSTDPROCS(void)
         switch (I) {                            /* the parameter and the type (cases not listed: as before) */
         case 1:
             FTYPE = BOOLPTR;
-            PARAM = newid();                    /* NEW(PARAM, ACTUALVARS, FALSE) */
+            PARAM = NEWID(V);                   /* NEW(PARAM, ACTUALVARS, FALSE) */
             PARAM->IDTYPE = INTPTR;
             PARAM->KLASS = ACTUALVARS;
             break;
@@ -209,7 +201,7 @@ static void ENTSTDPROCS(void)
             break;
         case 4:
             FTYPE = INTPTR;
-            PARAM = newid();
+            PARAM = NEWID(V);                   /* NEW(PARAM, ACTUALVARS, FALSE) */
             PARAM->IDTYPE = REALPTR;
             PARAM->KLASS = ACTUALVARS;
             break;
@@ -218,8 +210,8 @@ static void ENTSTDPROCS(void)
             break;
         case 12:
             FTYPE = NULL;
-            PARAM = newid();                    /* NEW(PARAM, FORMALVARS, FALSE) */
-            LSP = newtype();                    /* NEW(LSP, POINTER) */
+            PARAM = NEWID(V);                   /* NEW(PARAM, FORMALVARS, FALSE) */
+            LSP = NEWTYPE(ELTYPE);              /* NEW(LSP, POINTER) */
             LSP->SIZE = PTRSIZE;
             LSP->FORM = POINTER;
             LSP->U.ELTYPE = NULL;
@@ -232,7 +224,7 @@ static void ENTSTDPROCS(void)
             break;
         case 15:
             FTYPE = BOOLPTR;
-            PARAM = newid();
+            PARAM = NEWID(V);                   /* NEW(PARAM, ACTUALVARS, FALSE) */
             PARAM->IDTYPE = INTPTR;
             PARAM->KLASS = ACTUALVARS;
             break;
@@ -247,8 +239,8 @@ static void ENTSTDPROCS(void)
             PARAM = NULL;
             break;
         }
-        LCP = newid();                          /* NEW(LCP, PROC/FUNC, STANDARD) */
-        memcpy(LCP->NAME, NA[I - 1], 8);
+        LCP = NEWID(P);                         /* NEW(LCP, PROC/FUNC, STANDARD) */
+        memcpy(LCP->NAME, NA + 8 * (I - 1), 8);
         LCP->U.P.PFDECKIND = STANDARD;
         LCP->U.P.CSPNUM = I + 20;
         LCP->KLASS = ISPROC ? PROC : FUNC;
@@ -263,7 +255,7 @@ static void ENTSTDPROCS(void)
 static void INITSCALARS(void)
 {
     INTEGER I;
-    if (MEMAVAIL() > 9950)                      /* (an empirical value for a 50K byte machine) */
+    if (MEMAVAIL() > 22000)                     /* TEMP */
         NOSWAP = TRUE;
     else
         NOSWAP = FALSE;
@@ -382,7 +374,7 @@ void COMPINIT(void)
         DISPLAY[1].OCCUR = BLCK;
         LC = LC + 2;
         GLEV = 3;                               /* (keep the stack straight for now) */
-        OUTERBLOCK = newid();                   /* NEW(OUTERBLOCK, PROC, DECLARED, ACTUAL, FALSE) */
+        OUTERBLOCK = NEWID(P);                  /* NEW(OUTERBLOCK, PROC, DECLARED, ACTUAL, FALSE) */
         OUTERBLOCK->NEXT = NULL;
         OUTERBLOCK->U.P.LOCALLC = LC;
         memcpy(OUTERBLOCK->NAME, "PROGRAM ", 8);

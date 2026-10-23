@@ -11,9 +11,10 @@ struct PFILE;
 typedef struct PFILE PFILE;
 
 /* name: a Pascal string ([0] the length).  The result: the file, or NULL
-   (IORESULT <> 0) */
+   (IORESULT <> 0).  A new file is a TEXT file (written by WCH ...) or one
+   written by blocks. */
 PFILE *POPENOLD(CHAR *name);
-PFILE *POPENNEW(CHAR *name);
+PFILE *POPENNEW(CHAR *name, BOOLEAN text);
 void PCLOSE(PFILE *f, BOOLEAN lock);    /* CLOSE(F) / CLOSE(F, LOCK) */
 INTEGER PBLOCKREAD(PFILE *f, void *buf, INTEGER nblocks, INTEGER blk);
 INTEGER PBLOCKWRITE(PFILE *f, void *buf, INTEGER nblocks, INTEGER blk);

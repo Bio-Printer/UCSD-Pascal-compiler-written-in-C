@@ -41,7 +41,7 @@ static void GETNEXTBLOCK(void)
     PBLOCKREAD(REFFILE, &(*REFLIST)[1], 1, CURRENTBLOCK);
 }
 
-static void GETREFS(INTEGER ID, INTEGER LENGTH)
+static void GETREFS(INTEGER FID, INTEGER LENGTH)
 {
     ADDRRANGE LIC;
     INTEGER J, MAX, BLOCKCOUNT, COUNT;
@@ -54,7 +54,7 @@ static void GETREFS(INTEGER ID, INTEGER LENGTH)
         else
             MAX = NREFS - 1;
         for (J = 1; J <= MAX; J++)
-            if (ID == (*REFLIST)[J].KEY) {
+            if (FID == (*REFLIST)[J].KEY) {
                 GENWORD((*REFLIST)[J].OFFSET);
                 COUNT = COUNT + 1;
             }
@@ -321,7 +321,7 @@ void WRITELINKERINFO(BOOLEAN DECSTUFF)
 
 static void OPENREFFILE(void)
 {
-    REFFILE = POPENNEW((CHAR *)"\017*SYSTEM.INFO[*]");
+    REFFILE = POPENNEW((CHAR *)"\017*SYSTEM.INFO[*]", FALSE);
     if (REFFILE == NULL)
         ERROR(402);
 }
@@ -375,7 +375,7 @@ static void UNITDECLARATION(SETOFSYS *FSYS, void **UMARKP)
                 ERROR(101);
             }
         if (!FOUND) {
-            LCP = PNEW(sizeof(struct IDENTIFIER));      /* NEW(LCP, MODULE) */
+            LCP = NEWID(SEGID);      /* NEW(LCP, MODULE) */
             memcpy(LCP->NAME, ID, 8);
             LCP->IDTYPE = NULL;
             LCP->NEXT = MODPTR;
