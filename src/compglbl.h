@@ -12,6 +12,7 @@
 #include <string.h>
 #include <setjmp.h>
 typedef int INTEGER;
+typedef unsigned WORD;
 typedef unsigned char CHAR;
 typedef float REAL;
 #else
@@ -20,6 +21,7 @@ typedef float REAL;
 #include <stdint.h>
 #include <setjmp.h>
 typedef int16_t INTEGER;
+typedef uint16_t WORD;
 typedef unsigned char CHAR;
 typedef struct { unsigned char b[4]; } REAL;   /* the P-machine's real, as in memory (preal.c) */
 #endif
@@ -87,12 +89,14 @@ struct CONSTREC {
     CSTCLASS CCLASS;
     union {
         struct { INTEGER LLENG, LLAST; INTEGER LONGVAL[9 + 1]; } L;  /* LONG ([1..9]) */
-        INTEGER CSTVAL[8 + 1];          /* TRIX ([1..8]): overlaps the following */
+        INTEGER CSTVAL0[8];             /* TRIX: CSTVAL[1..8] (CSTVAL(P, I)): overlaps the following */
         REAL RVAL;                      /* REEL */
-        unsigned PVAL[8];               /* PSET: SET OF 0..127 */
+        WORD PVAL[8];                   /* PSET: SET OF 0..127, 16 members a word */
         struct { INTEGER SLGTH; CHAR SVAL[STRGLGTH + 1]; } S;  /* STRG ([1..STRGLGTH]) */
     } U;
 };
+
+#define CSTVAL(p, i) ((p)->U.CSTVAL0[(i) - 1])     /* Pascal's CSTVAL[I], I in 1..8 */
 
 typedef union { INTEGER IVAL; CSP VALP; } VALU;
 
