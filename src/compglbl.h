@@ -428,10 +428,38 @@ extern CHAR DISKBUF[512];
    procedure number; on the host a longjmp to main */
 void PASCALCOMPILER(void);
 #ifdef __TINYC__
-#define EXITCOMPILER() __cspv(4, (int)PASCALCOMPILER & 255, (int)PASCALCOMPILER >> 8)
+#define EXITCOMPILER() __cspv(4, (int)PASCALCOMPILER & 255, DIV((int)PASCALCOMPILER, 256))
 #else
 extern jmp_buf EXITPC;
 #define EXITCOMPILER() longjmp(EXITPC, 1)
+#endif
+
+/* DIV and MOD: the P-machine's DVI and MODI on the P-System, as in the
+   Pascal (C's / and % are a library function there: DVI and MODI differ from
+   them when an operand is negative, which none is here); a word's high
+   byte: the P-machine is little-endian, as is the host (the P-machine has no
+   shifts: << and >> are library functions too) */
+#ifdef __TINYC__
+#define DIV(a, b) __dvi(a, b)
+#define MOD(a, b) __mdi(a, b)
+#else
+#define DIV(a, b) ((a) / (b))
+#define MOD(a, b) ((a) % (b))
+#endif
+#define HIBYTE(w) (((CHAR *)&(w))[1])
+
+/* MOVELEFT, MOVERIGHT, FILLCHAR as Pascal has them (byte by byte: MOVELEFT
+   from the first byte up, MOVERIGHT from the last down): on the P-System
+   the P-machine's own (CSP 2, 3, 10), not the library's memcpy, memmove,
+   memset; on the host builtin.c's */
+#ifdef __TINYC__
+#define MOVELEFT(src, dst, n) __cspv(2, src, 0, dst, 0, n)
+#define MOVERIGHT(src, dst, n) __cspv(3, src, 0, dst, 0, n)
+#define FILLCHAR(dst, n, ch) __cspv(10, dst, 0, n, ch)
+#else
+void MOVELEFT(const void *src, void *dst, int n);
+void MOVERIGHT(const void *src, void *dst, int n);
+void FILLCHAR(void *dst, int n, int ch);
 #endif
 
 /* ---- sets (sets.c) ---- */
@@ -439,7 +467,8 @@ SETS *SETOF(SETS *s, int x, ...);           /* s := [x, ...] (the list ends with
 SETS *SETPLUS(SETS *s, SETS *a, SETS *b);   /* s := a + b */
 SETS *SETMINUS(SETS *s, SETS *a, SETS *b);  /* s := a - b */
 SETS *SETADD(SETS *s, SETS *a, int x, ...); /* s := a + [x, ...] */
-#define IN(x, s) (((s)->w[(x) >> 4] >> ((x) & 15)) & 1)
+extern WORD SETBIT[16];                     /* SETBIT[I]: the word with bit I */
+#define IN(x, s) (((s)->w[DIV(x, 16)] & SETBIT[MOD(x, 16)]) != 0)
 
 /* ---- forward declared procedures (COMPGLBLS) ---- */
 void ERROR(INTEGER ERRORNUM);

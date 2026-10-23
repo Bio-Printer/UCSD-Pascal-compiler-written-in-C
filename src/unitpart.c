@@ -66,7 +66,7 @@ static void GETREFS(INTEGER FID, INTEGER LENGTH)
     GENWORD(COUNT);
     IC = LIC;
     /* now fill the rest of the 8-word record */
-    for (J = 1; J <= (8 - COUNT % 8) % 8; J++)
+    for (J = 1; J <= MOD(8 - MOD(COUNT, 8), 8); J++)
         GENWORD(0);
 }
 
@@ -181,7 +181,7 @@ static void GLOBALSEARCH(CTP FCP)
             if (LIREC.LITYPE == CONSTDEF || LIREC.LITYPE == PUBLICDEF)
                 NEEDEDBYLINKER = FALSE;
     if (NEEDEDBYLINKER) {
-        memcpy(LIREC.LINAME, FCP->NAME, 8);
+        MOVELEFT(FCP->NAME, LIREC.LINAME, 8);
         GENNAME();
         GENWORD(LIREC.LITYPE);
         switch (LIREC.LITYPE) {
@@ -264,27 +264,27 @@ void WRITELINKERINFO(BOOLEAN DECSTUFF)
         if (PFNUMOF[I] != 0) {
             switch (I) {
             case SEEK:
-                memcpy(LIREC.LINAME, "FSEEK   ", 8);
+                MOVELEFT("FSEEK   ", LIREC.LINAME, 8);
                 LIREC.NPARAMS = 2;
                 break;
             case FREADREAL:
-                memcpy(LIREC.LINAME, "FREADREA", 8);
+                MOVELEFT("FREADREA", LIREC.LINAME, 8);
                 LIREC.NPARAMS = 2;
                 break;
             case FWRITEREAL:
-                memcpy(LIREC.LINAME, "FWRITERE", 8);
+                MOVELEFT("FWRITERE", LIREC.LINAME, 8);
                 LIREC.NPARAMS = 5;
                 break;
             case FREADDEC:
-                memcpy(LIREC.LINAME, "FREADDEC", 8);
+                MOVELEFT("FREADDEC", LIREC.LINAME, 8);
                 LIREC.NPARAMS = 3;
                 break;
             case FWRITEDEC:
-                memcpy(LIREC.LINAME, "FWRITEDE", 8);
+                MOVELEFT("FWRITEDE", LIREC.LINAME, 8);
                 LIREC.NPARAMS = 2 + DECSIZE(MAXDEC);
                 break;
             case DECOPS:
-                memcpy(LIREC.LINAME, "DECOPS  ", 8);
+                MOVELEFT("DECOPS  ", LIREC.LINAME, 8);
                 LIREC.NPARAMS = 0;
                 break;
             }
@@ -343,7 +343,7 @@ static void UNITDECLARATION(SETOFSYS *FSYS, void **UMARKP)
     /* (BFSY, DMARKP, ISSEGMENT: not set, nor read.  Nor is DFPROCP, but BLOCK
        compares it with OUTERBLOCK -- what was on the stack, never OUTERBLOCK,
        even when that is NIL ($U-): the unit's procedures are not its end) */
-    memset(&LLEXSTK, 0, sizeof LLEXSTK);
+    FILLCHAR(&LLEXSTK, sizeof LLEXSTK, 0);
     LLEXSTK.DFPROCP = &NOTOUTER;
     LLEXSTK.DOLDTOP = TOP;
     LLEXSTK.DOLDLEV = LEVEL;
@@ -376,7 +376,7 @@ static void UNITDECLARATION(SETOFSYS *FSYS, void **UMARKP)
             }
         if (!FOUND) {
             LCP = NEWID(SEGID);      /* NEW(LCP, MODULE) */
-            memcpy(LCP->NAME, ID, 8);
+            MOVELEFT(ID, LCP->NAME, 8);
             LCP->IDTYPE = NULL;
             LCP->NEXT = MODPTR;
             LCP->KLASS = MODULE;
@@ -384,7 +384,7 @@ static void UNITDECLARATION(SETOFSYS *FSYS, void **UMARKP)
             MODPTR = LCP;
         }
     }
-    memcpy(SEGTABLE[SEG].SEGNAME, ID, 8);
+    MOVELEFT(ID, SEGTABLE[SEG].SEGNAME, 8);
     PMARK(UMARKP);
     REFLIST = PNEW(sizeof(REFARRAY));
     TOS = PNEW(sizeof(struct LEXSTKREC));

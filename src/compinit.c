@@ -7,7 +7,7 @@
 
 static void setname(CTP cp, const char *name)
 {
-    memcpy(cp->NAME, name, 8);
+    MOVELEFT(name, cp->NAME, 8);
 }
 
 static void ENTSTDTYPES(void)
@@ -157,7 +157,7 @@ static void ENTSPCPROCS(void)
                 continue;                       /* GOTO 1 */
         ISFUNC = IN(I, &funcs);
         LCP = NEWIDN(2);                 /* NEW(LCP, FUNC/PROC, SPECIAL) */
-        memcpy(LCP->NAME, I <= 31 ? NA1 + 8 * (I - 1) : NA2 + 8 * (I - 32), 8);
+        MOVELEFT(I <= 31 ? NA1 + 8 * (I - 1) : NA2 + 8 * (I - 32), LCP->NAME, 8);
         LCP->NEXT = NULL;
         LCP->IDTYPE = NULL;
         LCP->KLASS = ISFUNC ? FUNC : PROC;
@@ -240,7 +240,7 @@ static void ENTSTDPROCS(void)
             break;
         }
         LCP = NEWIDN(3);              /* NEW(LCP, PROC/FUNC, STANDARD) */
-        memcpy(LCP->NAME, NA + 8 * (I - 1), 8);
+        MOVELEFT(NA + 8 * (I - 1), LCP->NAME, 8);
         LCP->U.P.PFDECKIND = STANDARD;
         LCP->U.P.CSPNUM = I + 20;
         LCP->KLASS = ISPROC ? PROC : FUNC;
@@ -275,15 +275,15 @@ static void INITSCALARS(void)
     for (SEG = 0; SEG <= MAXSEG; SEG++) {
         SEGTABLE[SEG].DISKADDR = 0;
         SEGTABLE[SEG].CODELENG = 0;
-        memcpy(SEGTABLE[SEG].SEGNAME, "        ", 8);
+        MOVELEFT("        ", SEGTABLE[SEG].SEGNAME, 8);
         SEGTABLE[SEG].SEGKIND = 0;
         SEGTABLE[SEG].TEXTADDR = 0;
     }
     USINGLIST = NULL;
     if (USERINFO.STUPID)
-        memcpy(SYSTEMLIB, "\016*SYSTEM.PASCAL", 15);
+        MOVELEFT("\016*SYSTEM.PASCAL", SYSTEMLIB, 15);
     else
-        memcpy(SYSTEMLIB, "\017*SYSTEM.LIBRARY", 16);
+        MOVELEFT("\017*SYSTEM.LIBRARY", SYSTEMLIB, 16);
     LC = LCAFTERMARKSTACK;
     IOCHECK = TRUE;
     DP = TRUE;
@@ -381,7 +381,7 @@ void COMPINIT(void)
         OUTERBLOCK = NEWID(P);                  /* NEW(OUTERBLOCK, PROC, DECLARED, ACTUAL, FALSE) */
         OUTERBLOCK->NEXT = NULL;
         OUTERBLOCK->U.P.LOCALLC = LC;
-        memcpy(OUTERBLOCK->NAME, "PROGRAM ", 8);
+        MOVELEFT("PROGRAM ", OUTERBLOCK->NAME, 8);
         OUTERBLOCK->IDTYPE = NULL;
         OUTERBLOCK->KLASS = PROC;
         OUTERBLOCK->U.P.PFDECKIND = DECLARED;
@@ -396,9 +396,9 @@ void COMPINIT(void)
     if (SY == PROGSY) {
         INSYMBOL();
         if (SY == IDENT) {
-            memcpy(SEGTABLE[SEG].SEGNAME, ID, 8);
+            MOVELEFT(ID, SEGTABLE[SEG].SEGNAME, 8);
             if (OUTERBLOCK != NULL) {
-                memcpy(OUTERBLOCK->NAME, ID, 8);
+                MOVELEFT(ID, OUTERBLOCK->NAME, 8);
                 ENTERID(OUTERBLOCK);            /* (allows EXIT on the program's name) */
             }
         } else

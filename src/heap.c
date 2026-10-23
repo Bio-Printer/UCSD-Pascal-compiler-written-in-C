@@ -14,7 +14,7 @@
 void *PNEW(int bytes)
 {
     void *p;
-    __cspv(1, &p, (bytes + 1) / 2);     /* NEW: words */
+    __cspv(1, &p, DIV(bytes + 1, 2));   /* NEW: words */
     return p;
 }
 

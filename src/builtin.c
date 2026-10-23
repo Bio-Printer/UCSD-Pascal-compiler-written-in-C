@@ -1,7 +1,8 @@
 /* builtin.c -- the interpreter's built-in procedures the Pascal compiler calls:
    IDSEARCH (CSP 7: the identifier at the cursor, and the reserved words;
    on the P-System the interpreter's own),
-   TREESEARCH (CSP 8: a name in an identifier tree) and SCAN (CSP 11).
+   TREESEARCH (CSP 8: a name in an identifier tree) and SCAN (CSP 11); and
+   on the host MOVELEFT, MOVERIGHT and FILLCHAR (CSP 2, 3, 10).
    They do what SYSTEM.MICRO does (the emulator's NativeCsp.inc follows it
    instruction for instruction; its reserved-word table is the interpreter's
    RESTBL at 1766H). */
@@ -142,3 +143,28 @@ INTEGER SCAN(INTEGER LIMIT, BOOLEAN NE, CHAR CH, CHAR *P)
             return i;
     return LIMIT;
 }
+
+#ifndef __TINYC__
+void MOVELEFT(const void *src, void *dst, int n)
+{
+    const CHAR *s = src;
+    CHAR *d = dst;
+    while (n-- > 0)
+        *d++ = *s++;
+}
+
+void MOVERIGHT(const void *src, void *dst, int n)
+{
+    const CHAR *s = (const CHAR *)src + n;
+    CHAR *d = (CHAR *)dst + n;
+    while (n-- > 0)
+        *--d = *--s;
+}
+
+void FILLCHAR(void *dst, int n, int ch)
+{
+    CHAR *d = dst;
+    while (n-- > 0)
+        *d++ = ch;
+}
+#endif

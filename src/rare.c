@@ -8,7 +8,6 @@
 
 #pragma segment RARE
 
-#define MOVELEFT(src, dst, n) memmove(dst, src, n)
 
 void ERROR(INTEGER ERRORNUM)
 {
@@ -116,8 +115,8 @@ INTEGER OPTIONS(CHAR STOPPER)
                 }
                 INCLFILE = POPENOLD(LTITLE);
                 if (!INCLFILE) {
-                    memcpy(T, LTITLE, LTITLE[0] + 1);   /* CONCAT(LTITLE, '.TEXT') */
-                    memcpy(&T[T[0] + 1], ".TEXT", 5);
+                    MOVELEFT(LTITLE, T, LTITLE[0] + 1);   /* CONCAT(LTITLE, '.TEXT') */
+                    MOVELEFT(".TEXT", &T[T[0] + 1], 5);
                     T[0] = T[0] + 5;
                     INCLFILE = POPENOLD(T);
                     if (!INCLFILE)
@@ -305,9 +304,9 @@ void FINISHCOMPILE(void)
            integers: nothing that can exceed 32767 is ROUNDed or TRUNCed) */
         STARTDOTS = RROUND(RDIVR(RFLOAT(LOWTIME), RFLOAT(6)));      /* tenths of a second */
         WSTR(NULL, ", ");
-        WINT(NULL, STARTDOTS / 10, 0);
+        WINT(NULL, DIV(STARTDOTS, 10), 0);
         WSTR(NULL, ".");
-        WINT(NULL, STARTDOTS % 10, 0);
+        WINT(NULL, MOD(STARTDOTS, 10), 0);
         WSTR(NULL, " secs, ");
         RATE = RMUL(RDIVR(RFLOAT(3600), RFLOAT(LOWTIME)), RFLOAT(SCREENDOTS));
         if (RLT(RATE, RFLOAT(32767)))

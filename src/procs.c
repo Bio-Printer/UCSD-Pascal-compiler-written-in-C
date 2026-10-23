@@ -5,7 +5,6 @@
 #include "compglbl.h"
 #include "pcio.h"
 
-#define MOVELEFT(src, dst, n) memmove(dst, src, n)
 
 /* ======================== PROCS.A ======================== */
 
@@ -58,7 +57,7 @@ void PRINTLINE(void)
     if (DP)
         DORLEV = 'D';
     else
-        DORLEV = (BEGSTMTLEV % 10) + '0';
+        DORLEV = MOD(BEGSTMTLEV, 10) + '0';
     if (BPTONLINE)
         STARORC = '*';
     WINT(LP, SCREENDOTS, 6);
@@ -121,7 +120,7 @@ static void CHECKEND(void)
     SYMCURSOR = SYMCURSOR + 1;
     if (NOISY) {
         WCH(NULL, '.');
-        if ((SCREENDOTS - STARTDOTS) % 50 == 0) {
+        if (MOD(SCREENDOTS - STARTDOTS, 50) == 0) {
             WLN(NULL);
             WCH(NULL, '<');
             WINT(NULL, SCREENDOTS, 4);
@@ -510,7 +509,7 @@ BOOLEAN STRGTYPE(STP FSP)
 
 INTEGER DECSIZE(INTEGER I)
 {
-    return (I + 3) / 4 + 1;                             /* (gross: the most space needed) */
+    return DIV(I + 3, 4) + 1;                             /* (gross: the most space needed) */
 }
 
 void CONSTANT(SETOFSYS *FSYS, STP *FSP, VALU *FVALU)
@@ -693,7 +692,7 @@ void GENWORD(INTEGER FWORD)
     if (IC & 1)
         IC = IC + 1;
     CODEP[IC] = FWORD & 255;                            /* MOVELEFT(FWORD, CODEP^[IC], 2): low byte first */
-    CODEP[IC + 1] = (FWORD >> 8) & 255;
+    CODEP[IC + 1] = HIBYTE(FWORD);
     if (FLIPBYTES) {
         TEMP = CODEP[IC];
         CODEP[IC] = CODEP[IC + 1];

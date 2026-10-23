@@ -11,8 +11,6 @@
 
 #pragma segment BODYPART
 
-#define MOVELEFT(src, dst, n) memmove(dst, src, n)
-#define MOVERIGHT(src, dst, n) memmove(dst, src, n)
 #define ABS(x) ((x) < 0 ? -(x) : (x))
 #define ODD(x) ((x) & 1)
 
@@ -62,8 +60,8 @@ static void GENLDC(INTEGER IVAL)
         GENBYTE(IVAL);
     else {
         GENBYTE(51 + 148);                      /* LDCI */
-        GENBYTE(ABS(IVAL) % 256);
-        GENBYTE(ABS(IVAL) / 256);
+        GENBYTE(MOD(ABS(IVAL), 256));
+        GENBYTE(DIV(ABS(IVAL), 256));
         if (IVAL < 0)
             GEN0(17);                           /* NGI */
     }
@@ -74,8 +72,8 @@ static void GENBIG(INTEGER IVAL)
     if (IVAL <= 127)
         GENBYTE(IVAL);
     else {
-        GENBYTE(128 + IVAL / 256);
-        GENBYTE(IVAL % 256);
+        GENBYTE(128 + DIV(IVAL, 256));
+        GENBYTE(MOD(IVAL, 256));
     }
 }
 
@@ -195,7 +193,7 @@ static void GENJMP(OPRANGE FOP, LBP FLBP)
     } else {
         /* MOVELEFT(REFLIST, CODEP^[IC], 2): the chain of references, in the code */
         CODEP[IC] = FLBP->REFLIST & 255;
-        CODEP[IC + 1] = (FLBP->REFLIST >> 8) & 255;
+        CODEP[IC + 1] = HIBYTE(FLBP->REFLIST);
         if (FOP == 57)                          /* UJP */
             DISP = IC + 4096;
         else
@@ -237,7 +235,7 @@ static void PUTLABEL(LBP FLBP)
         } else
             LOP = 33;                           /* FJP */
         IC = LREF;
-        LREF = CODEP[IC] | (CODEP[IC + 1] << 8);    /* MOVELEFT(CODEP^[IC], LREF, 2) */
+        LREF = CODEP[IC] + 256 * CODEP[IC + 1];     /* MOVELEFT(CODEP^[IC], LREF, 2) */
         GENJMP(LOP, FLBP);
     }
     IC = FLBP->OCCURIC;
@@ -851,7 +849,7 @@ static void CONCAT(struct CALLCTX *c)
             INSYMBOL();
     } while (!TEST);
     if (TEMPLGTH < STRGLGTH)
-        LC = LLC + TEMPLGTH / CHRSPERWD + 1;
+        LC = LLC + DIV(TEMPLGTH, CHRSPERWD) + 1;
     else
         TEMPLGTH = STRGLGTH;
     if (LC > LCMAX)
@@ -900,7 +898,7 @@ static void COPYDELETE(struct CALLCTX *c)
         GEN2(77, 0, 25);                        /* CXP SYS SCOPY */
         GEN2(50, 0, LLC);                       /* LDA */
         if (LSP->U.AR.MAXLENG < STRGLGTH)
-            LC = LLC + LSP->U.AR.MAXLENG / CHRSPERWD + 1;
+            LC = LLC + DIV(LSP->U.AR.MAXLENG, CHRSPERWD) + 1;
         if (LC > LCMAX)
             LCMAX = LC;
         LC = LLC;
@@ -1807,7 +1805,7 @@ static void FACTOR(SETOFSYS *FSYS)
             break;
         case LBRACK:
             INSYMBOL();
-            memset(CSTPART, 0, sizeof CSTPART);
+            FILLCHAR(CSTPART, sizeof CSTPART, 0);
             VARPART = FALSE;
             LSP = NEWTYPE(ELSET);       /* NEW(LSP, POWER) */
             LSP->U.ELSET = NULL;
@@ -1858,7 +1856,7 @@ static void FACTOR(SETOFSYS *FSYS)
                                 IC = LIC;       /* forget the first constant */
                                 for (I = LOWVAL; I <= HIGHVAL; I++)  /* CSTPART + [LOWVAL..HIGHVAL] */
                                     if (I >= 0)
-                                        CSTPART[I >> 4] |= 1 << (I & 15);
+                                        CSTPART[DIV(I, 16)] |= SETBIT[MOD(I, 16)];
                             } else {
                                 GEN0(LOP);
                                 if (VARPART)
@@ -1885,7 +1883,7 @@ static void FACTOR(SETOFSYS *FSYS)
                     if (CSTPART[I] != 0)
                         break;
                 if (I < 8) {                    /* CSTPART <> [] */
-                    memcpy(SCONST->U.PVAL, CSTPART, sizeof CSTPART);
+                    MOVELEFT(CSTPART, SCONST->U.PVAL, sizeof CSTPART);
                     SCONST->CCLASS = PSET;
                     GATTR.CVAL.VALP = SCONST;
                     GATTR.KIND = CST;
@@ -1894,7 +1892,7 @@ static void FACTOR(SETOFSYS *FSYS)
                 }
                 GATTR.KIND = EXPR;
             } else {
-                memcpy(SCONST->U.PVAL, CSTPART, sizeof CSTPART);
+                MOVELEFT(CSTPART, SCONST->U.PVAL, sizeof CSTPART);
                 SCONST->CCLASS = PSET;
                 GATTR.CVAL.VALP = SCONST;
                 GATTR.KIND = CST;
@@ -2318,7 +2316,7 @@ static void ASSIGNMENT(SETOFSYS *FSYS, CTP FCP)
                         if (LATTR.TYPTR->U.AR.AISSTRNG)
                             GEN1(42, LATTR.TYPTR->U.AR.MAXLENG);    /* SAS */
                         else
-                            GEN1(40, (LMAX + 1) / 2);               /* MOV */
+                            GEN1(40, DIV(LMAX + 1, 2));               /* MOV */
                     } else
                         GEN1(40, LATTR.TYPTR->SIZE);                /* MOV */
                     break;
@@ -2867,7 +2865,7 @@ static void BODY(SETOFSYS *FSYS, CTP FPROCP)
                                 GEN1(42, T->U.AR.MAXLENG);  /* SAS */
                             else if (T->U.AR.INXTYPE != NULL) {
                                 GETBOUNDS(T->U.AR.INXTYPE, &LMIN, &LMAX);
-                                GEN1(40, (LMAX - LMIN + 1 + 1) / 2);    /* MOV */
+                                GEN1(40, DIV(LMAX - LMIN + 1 + 1, 2));    /* MOV */
                             }
                         } else
                             GEN1(40, LCP->IDTYPE->SIZE);    /* MOV */
