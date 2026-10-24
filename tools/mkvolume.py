@@ -25,7 +25,7 @@ Dir, ROOM = tcmkvolume.Dir, tcmkvolume.ROOM
 VOLUME = os.path.join(ROOT, 'build', 'PASCAL-C.BLK')
 
 # the modules of the P-System build, in the Makefile's order (PSRC)
-MODULES = ['globals', 'builtin', 'sets', 'heap', 'procs', 'compinit', 'decpart', 'bodypart',
+MODULES = ['globals', 'builtin', 'sets', 'heap', 'procs', 'compinit', 'decpart', 'bodypart', 'double',
            'unitpart', 'block', 'rare', 'pcio_psys', 'pc_psys']
 
 BUILD = """; BUILD -- the Pascal compiler in C: CC @PASCALC:/SRC/BUILD from the shell (or
@@ -45,6 +45,7 @@ WHAT = {
     'compinit': 'COMPINIT: the standard names',
     'decpart': 'DECPART.A-C: DECLARATIONPART',
     'bodypart': 'BODYPART.A-E: code, expressions, statements',
+    'double': 'DOUBLE\'s code (BODYPART calls it)',
     'unitpart': 'UNITPART: WRITELINKERINFO, UNITPART',
     'block': 'BLOCK, and the compiler\'s main body',
     'rare': 'ERROR, the options, long and REAL constants, the end',
@@ -82,6 +83,7 @@ def main():
     src.text('BUILD.TEXT', BUILD, 'CC @PASCALC:/SRC/BUILD makes PASCALC:PC.CODE again')
     src.textfile('COMPGLBL.H', os.path.join(ROOT, 'src', 'compglbl.h'), 'COMPGLBLS: constants, types, global variables')
     src.textfile('PCIO.H', os.path.join(ROOT, 'src', 'pcio.h'), 'what the compiler reads and writes')
+    src.textfile('GEN.H', os.path.join(ROOT, 'src', 'gen.h'), 'what BODYPART.C and DOUBLE.C share')
     for m in MODULES:
         src.textfile(m.upper() + '.C', os.path.join(ROOT, 'src', m + '.c'), WHAT[m])
     v.sub('OBJ', 'empty: the objects BUILD makes (-O PASCALC:/OBJ)', 6 + objblocks() + ROOM)

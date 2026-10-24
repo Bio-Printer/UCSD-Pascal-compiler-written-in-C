@@ -34,40 +34,27 @@ static WORD BLOCKFIBS[NBLOCKFILES][NILFILESIZE];
 static WORD TEXTFIB[FILESIZE + 1];
 static struct PFILE OPENFILES[NBLOCKFILES + 1];
 
-/* NBLOCKS blocks of a file in a sub-volume from its block BLK: within its blocks (read) or
-   its room (written), as stdio's __blockio */
-static INTEGER SUBIO(PFILE *f, void *buf, INTEGER nblocks, INTEGER blk, BOOLEAN doread)
+/* by stdio's __blockio (resident in every program): FBLOCKIO, or a file in a sub-volume by
+   the disk's blocks, within the file's */
+int __blockio(FILE *f, int nblocks, int block, int doread);     /* (stdio's: libint.h) */
+
+static INTEGER BLOCKIO(PFILE *f, void *buf, INTEGER nblocks, INTEGER blk, BOOLEAN doread)
 {
-    INTEGER *r = (INTEGER *)f->FIB;
-    INTEGER n;
-    n = (doread ? r[3] : r[2]) - blk;
-    if (n > nblocks)
-        n = nblocks;
-    if (n <= 0)
-        return 0;
-    if (doread)
-        __cspv(5, r[0], buf, 0, n * 512, r[1] + blk, 0);   /* UNITREAD */
-    else
-        __cspv(6, r[0], buf, 0, n * 512, r[1] + blk, 0);   /* UNITWRITE */
-    if (__cspi(34) != 0)
-        return 0;
-    if (!doread && blk + n > r[3])
-        r[3] = r[5] = blk + n;
-    return n;
+    FILE fake;
+    fake.flags = f->INUSE >= SUBOLD ? __F_SUB : 0;
+    fake.fib = (char *)f->FIB;
+    fake.buf = (unsigned char *)buf;
+    return __blockio(&fake, nblocks, blk, doread);
 }
 
 INTEGER PBLOCKREAD(PFILE *f, void *buf, INTEGER nblocks, INTEGER blk)
 {
-    if (f->INUSE >= SUBOLD)
-        return SUBIO(f, buf, nblocks, blk, TRUE);
-    return __cxp0i(28, f->FIB, buf, 0, nblocks, blk, 1, 0, 0);     /* FBLOCKIO */
+    return BLOCKIO(f, buf, nblocks, blk, TRUE);
 }
 
 INTEGER PBLOCKWRITE(PFILE *f, void *buf, INTEGER nblocks, INTEGER blk)
 {
-    if (f->INUSE >= SUBOLD)
-        return SUBIO(f, buf, nblocks, blk, FALSE);
-    return __cxp0i(28, f->FIB, buf, 0, nblocks, blk, 0, 0, 0);
+    return BLOCKIO(f, buf, nblocks, blk, FALSE);
 }
 
 void WCH(PFILE *f, CHAR c)

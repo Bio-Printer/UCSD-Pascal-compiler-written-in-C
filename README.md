@@ -95,8 +95,9 @@ Programs without DOUBLE compile as before, byte for byte.
   SYSTEM.LIBRARY: a program needs no L(ink for them.  A procedure's code is at most
   1299 bytes, so one with many READs and WRITEs of DOUBLEs may need splitting
   (error 253).
-* **The compiler**: the code for DOUBLE is in a segment of its own (1.3 KB, in the
-  library's DIRS: a code file has at most 10 segments),
+* **The compiler**: the code for DOUBLE (`src/double.c`, a module of its own so
+  that CC compiles BODYPART.C in less memory) is in a segment of its own (1.3 KB,
+  in the library's DIRS: a code file has at most 10 segments),
   in memory only while a DOUBLE is compiled.  The compiler's own source compiles
   from the shell with 3146 words to spare (3434 before sub-volume paths, which bring
   the C library's string functions into memory; 3777 before DOUBLE).

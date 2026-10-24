@@ -14,6 +14,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 sys.path.insert(0, HERE)
 from refcompile import TINYC
+from mkvolume import MODULES
 sys.path.insert(0, os.path.join(TINYC, 'tools'))
 import ucsdvol
 from psys import ensure_setup, BUILD, shell_script, shell_transcript
@@ -48,9 +49,9 @@ def main():
     done = 'Linking PASCALC:PC.CODE' in tr and 'bytes free' in tr[tr.find('Linking PASCALC:PC.CODE'):]
     objs = [e[3] for e in v.sub('OBJ').entries]
     stray = [e[3] for e in v.sub('SRC').entries if e[3].endswith('.OBJ')]
-    if len(objs) != 13 or stray:
+    if len(objs) != len(MODULES) or stray:
         print('the objects: %s in OBJ, %s in SRC' % (objs, stray))
-    ok = done and built == host and len(objs) == 13 and not stray
+    ok = done and built == host and len(objs) == len(MODULES) and not stray
     print('PASCALC:PC.CODE %s the host\'s build/psys/PC.CODE (%d bytes)'
           % ('IDENTICAL to' if ok else ('DIFFERS from' if done else 'not linked; was'), len(built)))
     shutil.rmtree(d, True)

@@ -50,6 +50,7 @@ THE SOURCES (SRC)
   BUILD.TEXT    CC @PASCALC:/SRC/BUILD makes PC.CODE again, the same
   COMPGLBL.H    COMPGLBLS: the constants, types and global variables
   PCIO.H        what the compiler reads and writes (the system's files)
+  GEN.H         what BODYPART.C and DOUBLE.C share
   GLOBALS.C     the global variables
   PROCS.C       PROCS.A, PROCS.B: the scanner, the symbol table, the code
                 buffer
@@ -60,7 +61,8 @@ THE SOURCES (SRC)
   COMPINIT.C    COMPINIT (a segment): the standard names
   DECPART.C     DECPART.A-C, DECLARATIONPART (a segment)
   BODYPART.C    BODYPART.A-E (a segment): the code generator, expressions,
-                statements; DOUBLE's code (in the segment DIRS)
+                statements
+  DOUBLE.C      DOUBLE's code, which BODYPART calls (in the segment DIRS)
   UNITPART.C    WRITELINKERINFO and UNITPART (segments): units
   BLOCK.C       BLOCK, and the compiler's main body
   RARE.C        what the compiler seldom does, a segment of its own: ERROR,
