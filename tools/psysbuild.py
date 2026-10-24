@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""psysbuild.py -- PASCALC:BUILD on the P-System: from the Tiny-C shell,
-CC @PASCALC:BUILD compiles the compiler's modules on PASCALC:
-(build/PASCAL-C.BLK, tools/mkvolume.py) and links PASCALC:PC.CODE, which
-must be build/psys/PC.CODE byte for byte (the host's Tiny-C made that one).
+"""psysbuild.py -- PASCALC:/SRC/BUILD on the P-System: from the Tiny-C shell,
+CC @PASCALC:/SRC/BUILD compiles the compiler's modules in PASCALC:/SRC
+(build/PASCAL-C.BLK, tools/mkvolume.py), their objects into PASCALC:/OBJ, and
+links PASCALC:PC.CODE, which must be build/psys/PC.CODE byte for byte (the
+host's Tiny-C made that one); no object is left in SRC.
 
   psysbuild.py          (PSYS_MODE as in UCSD-TinyC)
 
@@ -31,7 +32,7 @@ def main():
     shutil.copy(os.path.join(ROOT, 'build', 'PASCAL-C.BLK'), vol)
     spare = os.path.join(d, 'SPARE.BLK')
     ucsdvol.main(['new', spare, 'SPARE', '100'])
-    L = ['WAIT "Command:"', 'TYPE "S"', 'WAIT "shell> "', 'TYPE "cc @pascalc:build\\r"',
+    L = ['WAIT "Command:"', 'TYPE "S"', 'WAIT "shell> "', 'TYPE "cc @pascalc:/src/build\\r"',
          'WAIT "shell> "', 'TYPE "bye\\r"', 'WAIT "Command:"']
     sp = os.path.join(d, 'build.script')
     open(sp, 'w').write(shell_script('\n'.join(L) + '\n'))
@@ -45,7 +46,11 @@ def main():
     host = open(os.path.join(ROOT, 'build', 'psys', 'PC.CODE'), 'rb').read()
     built = v.read('PC.CODE')[0]
     done = 'Linking PASCALC:PC.CODE' in tr and 'bytes free' in tr[tr.find('Linking PASCALC:PC.CODE'):]
-    ok = done and built == host
+    objs = [e[3] for e in v.sub('OBJ').entries]
+    stray = [e[3] for e in v.sub('SRC').entries if e[3].endswith('.OBJ')]
+    if len(objs) != 13 or stray:
+        print('the objects: %s in OBJ, %s in SRC' % (objs, stray))
+    ok = done and built == host and len(objs) == 13 and not stray
     print('PASCALC:PC.CODE %s the host\'s build/psys/PC.CODE (%d bytes)'
           % ('IDENTICAL to' if ok else ('DIFFERS from' if done else 'not linked; was'), len(built)))
     shutil.rmtree(d, True)

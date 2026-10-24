@@ -9,7 +9,7 @@ compiler that produces the same code files as the original.  All 25 programs
 of the corpus (below), the compiler's own source among them, compile to code
 files identical to SYSTEM.COMPILER's: on the host, and on the P-System from
 the Tiny-C shell (`PC NAME`), where CC also rebuilds PC.CODE from its sources
-(`CC @PASCALC:BUILD`).  It also has a type DOUBLE (below), the emulator's
+(`CC @PASCALC:/SRC/BUILD`).  It also has a type DOUBLE (below), the emulator's
 8-byte floating point.  Next: SYSTEM.COMPILER; then phase 2, which improves
 the code it generates (smaller, tighter P-code; the emulator's extra CSPs).
 
@@ -44,9 +44,18 @@ the code it generates (smaller, tighter P-code; the emulator's extra CSPs).
 * `make psys` builds it with Tiny-C for the P-System (`build/psys/PC.CODE`);
   `tools/psysrun.py` compiles the corpus with it from the shell in the
   emulator and compares the same way.
-* `tools/mkvolume.py` makes the volume PASCALC: (`build/PASCAL-C.BLK`: PC.CODE,
-  its sources, BUILD.TEXT, README.TEXT); `tools/psysbuild.py` runs
-  `CC @PASCALC:BUILD` on the P-System, which must give the host's PC.CODE.
+* `tools/mkvolume.py` makes the volume PASCALC: (`build/PASCAL-C.BLK`), laid out
+  as UCSD-TinyC's TINY-C: is, in sub-volumes: PC.CODE, README.TEXT and FILES.TEXT
+  at the top, `SRC/` the sources with BUILD.TEXT, `OBJ/` (empty) for the objects
+  BUILD makes, `DEMOS/` (PI) and `TESTS/` (DOUBLES, READTEST).
+  `tools/psysbuild.py` runs `CC @PASCALC:/SRC/BUILD` on the P-System, which must
+  give the host's PC.CODE (the objects in OBJ, none in SRC); `tools/voltest.py`
+  uses the volume from the shell: `PC PASCALC:/DEMOS/PI` and the program run where
+  it is, then `CD PASCALC:/TESTS`, `PC READTEST` and READTEST.
+* On the P-System PC takes paths into sub-volumes as every Tiny-C program does
+  (`PC PASCALC:/DEMOS/PI`, or a name on the shell's path after a CD), through the
+  library's own (dirs.c: `__svplace`, `__svopenat`, `__svcloseat`); its include files
+  and units too.
 
 * `tools/doubletest.py` checks DOUBLE (below): the programs `tests/*.PAS`, compiled by
   the host and on the P-System (the same code file), run and print `tests/*.expect`.
@@ -86,9 +95,11 @@ Programs without DOUBLE compile as before, byte for byte.
   SYSTEM.LIBRARY: a program needs no L(ink for them.  A procedure's code is at most
   1299 bytes, so one with many READs and WRITEs of DOUBLEs may need splitting
   (error 253).
-* **The compiler**: the code for DOUBLE is a segment of its own (DOUBLES, 1.3 KB),
+* **The compiler**: the code for DOUBLE is in a segment of its own (1.3 KB, in the
+  library's DIRS: a code file has at most 10 segments),
   in memory only while a DOUBLE is compiled.  The compiler's own source compiles
-  from the shell with 3434 words to spare (3777 before DOUBLE).
+  from the shell with 3146 words to spare (3434 before sub-volume paths, which bring
+  the C library's string functions into memory; 3777 before DOUBLE).
 
 `tests/PI.PAS` is Tiny-C's `tests/pi.c` in Pascal and prints its `pi.expect`, byte
 for byte; `tests/DOUBLES.PAS` and `tests/READTEST.PAS` try the rest.

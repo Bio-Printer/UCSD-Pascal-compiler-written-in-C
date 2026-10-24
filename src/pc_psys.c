@@ -12,6 +12,8 @@
    in memory. */
 #include <psys.h>
 #include "pcio.h"
+#include <stdio.h>
+#include <dirs.h>                       /* __svpath */
 
 #pragma segment RARE
 
@@ -24,7 +26,7 @@ static int ARGS(CHAR *line, CHAR **argv)
     int *e;
     CHAR *pl;
     int sum;
-    int n, i, argc;
+    int n, i, k, argc;
     e = SYSCOM->expansion;
     pl = (CHAR *)__osvaraddr(PX_PL);
     n = 0;
@@ -35,8 +37,11 @@ static int ARGS(CHAR *line, CHAR **argv)
     if (e[0] == PX_CHILD && e[6] == PX_ARGS && pl[0] <= 80 && e[7] == sum)
         n = pl[0];
     e[6] = 0;
-    for (i = 0; i < n && pl[i + 1] != PX_PATHSEP; i++)  /* (the shell's path after the arguments) */
+    for (i = 0; i < n && pl[i + 1] != PX_PATHSEP; i++)
         line[i] = pl[i + 1];
+    for (k = 0; i + 2 + k <= n && k < 63; k++)  /* the shell's path after the arguments (its CD: dirs.h) */
+        __svpath[k] = pl[i + 2 + k];
+    __svpath[k] = 0;
     n = i;
     line[n] = 0;
     argc = 0;

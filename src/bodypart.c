@@ -282,8 +282,10 @@ static void PUTLABEL(LBP FLBP)
    IEEE binary64, 4 words, done by the emulator's CSPs 100..137 (CSP 100 DADD
    ...): a segment of its own, called only when a DOUBLE is there.  A REAL
    literal or constant keeps the same number as a DOUBLE (RD.D, made from its
-   digits), so it is exact where it meets one; 1.5D0 is a DOUBLE. */
-#pragma segment DOUBLES
+   digits), so it is exact where it meets one; 1.5D0 is a DOUBLE.  (In the
+   library's segment DIRS -- what finds a file in a sub-volume, in memory only
+   while a path is looked up: a code file has at most 10 segments.) */
+#pragma segment DIRS
 
 #define DWTEMP (1 + 21)                 /* WRITE's temporary: the width, a STRING[40] */
 
