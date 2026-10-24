@@ -43,6 +43,12 @@ WHAT = {
 }
 
 
+# DOUBLE's test programs (tests/, tools/doubletest.py): PC NAME, then NAME
+TESTS = [('PI', 'DOUBLE: pi by Archimedes\' method (Tiny-C\'s PI.C)'),
+         ('DOUBLES', 'DOUBLE: arithmetic, functions, WRITE, parameters'),
+         ('READTEST', 'DOUBLE: READ from the console and a file')]
+
+
 def main():
     pc = os.path.join(ROOT, 'build', 'psys', 'PC.CODE')
     if not os.path.exists(pc):
@@ -62,6 +68,9 @@ def main():
     for m in MODULES:
         files.append((m.upper() + '.C', ucsdvol.text_to_ucsd(open(os.path.join(ROOT, 'src', m + '.c')).read()), 3,
                       WHAT[m]))
+    for t, what in TESTS:
+        files.append((t + '.TEXT', ucsdvol.text_to_ucsd(open(os.path.join(ROOT, 'tests', t + '.PAS')).read()), 3,
+                      what))
     listing = ['PASCALC:  the UCSD Pascal compiler written in C (PASCAL-C.BLK)', '',
                '  %-15s %6s  %s' % ('FILE', 'BLOCKS', 'WHAT'), '']
     for name, raw, kind, what in files:

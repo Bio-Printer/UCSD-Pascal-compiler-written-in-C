@@ -5,6 +5,9 @@
    segment dictionary (PASCALCOMPILER's, BLOCK.TEXT). */
 #include "compglbl.h"
 #include "pcio.h"
+#ifndef __TINYC__
+#include <stdlib.h>
+#endif
 
 #pragma segment RARE
 
@@ -219,33 +222,56 @@ void LONGNUMBER(INTEGER IPART, INTEGER ENDI, INTEGER K, INTEGER ISUM)
 }
 
 /* NUMBER: a REAL: its integer part, fraction and exponent */
-void REALNUMBER(INTEGER IPART, INTEGER ENDI, INTEGER FPART, INTEGER ENDF,
-                INTEGER EPART, INTEGER ENDE, INTEGER SIGN)
+/* a number's text (C's form: digits, '.', E) to a DOUBLE's 8 bytes, the
+   lowest word first: C's strtod, on the P-System the emulator's (CSP 135),
+   so that both builds make the same bits */
+void DBLTEXT(CHAR *TEXT, WORD *D)
 {
+#ifdef __TINYC__
+    __cspi(135, TEXT, D);
+#else
+    double x = strtod((char *)TEXT, NULL);
+    unsigned char *b = (unsigned char *)&x;
+    INTEGER i;
+    for (i = 0; i < 4; i++)
+        D[i] = b[2 * i] | (b[2 * i + 1] << 8);
+#endif
+}
+
+void REALNUMBER(INTEGER IPART, INTEGER ENDI, INTEGER FPART, INTEGER ENDF,
+                INTEGER EPART, INTEGER ENDE, INTEGER SIGN, INTEGER ENDN, BOOLEAN ISDBL)
+{
+    CHAR TEXT[82];
     INTEGER EXPONENT, J;
     REAL RSUM, D;                                       /* (D: CC's expressions are short) */
     CSP LVP;
     RSUM = RFLOAT(0);
-    for (J = IPART; J <= ENDI; J++) {
-        D = RFLOAT(SYMBUFP[J] - '0');
-        RSUM = RADD(RMUL(RSUM, RFLOAT(10)), D);
+    if (!ISDBL) {                                       /* (a DOUBLE has no REAL) */
+        for (J = IPART; J <= ENDI; J++) {
+            D = RFLOAT(SYMBUFP[J] - '0');
+            RSUM = RADD(RMUL(RSUM, RFLOAT(10)), D);
+        }
+        for (J = ENDF; J >= FPART; J--) {
+            D = RDIVR(RFLOAT(SYMBUFP[J] - '0'), RPOT(J - FPART + 1));
+            RSUM = RADD(RSUM, D);
+        }
+        EXPONENT = 0;
+        for (J = EPART; J <= ENDE; J++)
+            EXPONENT = EXPONENT * 10 + SYMBUFP[J] - '0';
+        if (SIGN == -1)
+            RSUM = RDIVR(RSUM, RPOT(EXPONENT));
+        else
+            RSUM = RMUL(RSUM, RPOT(EXPONENT));
     }
-    for (J = ENDF; J >= FPART; J--) {
-        D = RDIVR(RFLOAT(SYMBUFP[J] - '0'), RPOT(J - FPART + 1));
-        RSUM = RADD(RSUM, D);
-    }
-    EXPONENT = 0;
-    for (J = EPART; J <= ENDE; J++)
-        EXPONENT = EXPONENT * 10 + SYMBUFP[J] - '0';
-    if (SIGN == -1)
-        RSUM = RDIVR(RSUM, RPOT(EXPONENT));
-    else
-        RSUM = RMUL(RSUM, RPOT(EXPONENT));
     SY = REALCONST;
     OP = NOOP;
-    LVP = NEWCONST(RVAL);            /* NEW(LVP, REEL) */
-    LVP->CCLASS = REEL;
+    LVP = NEWCONST(RD);              /* NEW(LVP, REEL), and its DOUBLE */
+    LVP->CCLASS = ISDBL ? DREEL : REEL;
     LVP->U.RVAL = RSUM;
+    for (J = IPART; J <= ENDN && J - IPART < 80; J++)
+        TEXT[J - IPART] = SYMBUFP[J] == 'D' ? 'E' : SYMBUFP[J];
+    TEXT[J - IPART] = 0;
+    DBLTEXT(TEXT, LVP->U.RD.D);
     VAL.VALP = LVP;
 }
 

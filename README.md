@@ -9,9 +9,9 @@ compiler that produces the same code files as the original.  All 25 programs
 of the corpus (below), the compiler's own source among them, compile to code
 files identical to SYSTEM.COMPILER's: on the host, and on the P-System from
 the Tiny-C shell (`PC NAME`), where CC also rebuilds PC.CODE from its sources
-(`CC @PASCALC:BUILD`).  Next: SYSTEM.COMPILER; then phase 2, which improves
-the code it generates (smaller, tighter P-code; the emulator's extra CSPs;
-8-byte doubles).
+(`CC @PASCALC:BUILD`).  It also has a type DOUBLE (below), the emulator's
+8-byte floating point.  Next: SYSTEM.COMPILER; then phase 2, which improves
+the code it generates (smaller, tighter P-code; the emulator's extra CSPs).
 
 ## Goals
 
@@ -48,4 +48,47 @@ the code it generates (smaller, tighter P-code; the emulator's extra CSPs;
   its sources, BUILD.TEXT, README.TEXT); `tools/psysbuild.py` runs
   `CC @PASCALC:BUILD` on the P-System, which must give the host's PC.CODE.
 
+* `tools/doubletest.py` checks DOUBLE (below): the programs `tests/*.PAS`, compiled by
+  the host and on the P-System (the same code file), run and print `tests/*.expect`.
+
 See [docs/PLAN.md](docs/PLAN.md) for how the Pascal is translated.
+
+## DOUBLE (not the Pascal's)
+
+`DOUBLE` is a standard type: IEEE binary64, 8 bytes (16 significant digits,
+exponents to ±308), done by the emulator's CSPs 100..137 (UCSD-TinyC's
+`docs/DOUBLES.md`; in Z80 mode the emulator's coprocessor, engine 1.93 or later).
+Programs without DOUBLE compile as before, byte for byte.
+
+* **Constants**: `1.5D0`, `2D-3`, `3.14159265358979D0` are DOUBLEs (a `D` for the
+  `E`).  A REAL literal or constant (`0.1`, `CONST TENTH = 0.1`) is a DOUBLE where
+  it meets one -- `D := 0.1`, `TENTH * D`, a DOUBLE parameter -- made from its
+  digits, so exact, not a widened REAL.
+* **Conversions**: INTEGER and REAL become DOUBLE automatically, also on the left
+  of an operator; nothing becomes smaller by itself: `SNGL(D)` (new) is D as a
+  REAL, `TRUNC(D)` and `ROUND(D)` an INTEGER (as for a REAL; a DOUBLE outside
+  -32768..32767 gives the nearest end).
+* **Operators**: `+ - * /`, the sign, `= <> < <= > >=` (a DOUBLE with an INTEGER,
+  a REAL or a DOUBLE).  Not `DIV`, `MOD`, `SUCC`, `PRED`, `ORD`, FOR, CASE,
+  subranges or sets, as for a REAL.
+* **Functions**: `ABS SQR SQRT SIN COS ATAN LN EXP LOG` (LOG is base 10) of a
+  DOUBLE give a DOUBLE; with an INTEGER or a REAL they are the REAL ones.
+* **Everywhere a REAL can be**: variables, VAR and value parameters, function
+  results (4 words: the caller makes room), arrays and records.
+* **WRITE**: `WRITE(D:W:F)` F decimals, as C's `%W.Ff`; `WRITE(D)` and
+  `WRITE(D:W)` 16 significant digits, `%W.15e` (`3.141592653589793e+00`).  A
+  width less than the text does not cut it.  (C's form: no space before a
+  number, as REAL's WRITE puts.)
+* **READ**: as READ of a REAL reads one -- blanks, then the number (digits,
+  `+ - . E e`), its next character left in F^ -- by C's `strtod` (CSP 135).
+* **Code**: WRITE and READ of a DOUBLE are made in place (CSP 133 into a string,
+  then the system's string write; READ about 110 bytes), nothing from
+  SYSTEM.LIBRARY: a program needs no L(ink for them.  A procedure's code is at most
+  1299 bytes, so one with many READs and WRITEs of DOUBLEs may need splitting
+  (error 253).
+* **The compiler**: the code for DOUBLE is a segment of its own (DOUBLES, 1.3 KB),
+  in memory only while a DOUBLE is compiled.  The compiler's own source compiles
+  from the shell with 3434 words to spare (3777 before DOUBLE).
+
+`tests/PI.PAS` is Tiny-C's `tests/pi.c` in Pascal and prints its `pi.expect`, byte
+for byte; `tests/DOUBLES.PAS` and `tests/READTEST.PAS` try the rest.

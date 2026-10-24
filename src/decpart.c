@@ -181,7 +181,7 @@ static void SIMPLETYPE(SETOFSYS *FSYS, STP *FSP, ADDRRANGE *FSIZE)
             if (LSP != NULL)
                 if (LSP->FORM == SUBRANGE)
                     if (LSP->U.SR.RANGETYPE != NULL) {
-                        if (LSP->U.SR.RANGETYPE == REALPTR)
+                        if (LSP->U.SR.RANGETYPE == REALPTR || LSP->U.SR.RANGETYPE == DOUBLEPTR)
                             ERROR(399);
                         else if (LSP->U.SR.MIN.IVAL > LSP->U.SR.MAX.IVAL) {
                             ERROR(102);
@@ -207,7 +207,7 @@ static BOOLEAN PACKABLE(struct TYPCTX *t, STP FSP)
         switch (FSP->FORM) {
         case SUBRANGE:
         case SCALAR:
-            if (FSP != INTPTR && FSP != REALPTR) {
+            if (FSP != INTPTR && FSP != REALPTR && FSP != DOUBLEPTR) {
                 GETBOUNDS(FSP, &LMIN, &LMAX);
                 if (LMIN >= 0) {
                     r = TRUE;
@@ -322,7 +322,7 @@ static void VARIANTLIST(struct FLCTX *f)
             f->LSP1 = f->LCP1->IDTYPE;
             if (f->LSP1 != NULL) {
                 if (f->LSP1->FORM <= SUBRANGE) {
-                    if (COMPTYPES(REALPTR, f->LSP1))
+                    if (COMPTYPES(REALPTR, f->LSP1) || f->LSP1 == DOUBLEPTR)
                         ERROR(109);
                     f->LCP->IDTYPE = f->LSP1;
                     f->LSP->U.TF.TAGFIELDP = f->LCP;
@@ -567,7 +567,7 @@ static void TYP(struct DECCTX *d, SETOFSYS *FSYS, STP *FSP, ADDRRANGE *FSIZE)
                     t->LSP1->SIZE = t->LSIZE;
                     if (t->LSP2 != NULL) {
                         if (t->LSP2->FORM <= SUBRANGE) {
-                            if (t->LSP2 == REALPTR) {
+                            if (t->LSP2 == REALPTR || t->LSP2 == DOUBLEPTR) {
                                 ERROR(109);
                                 t->LSP2 = NULL;
                             } else if (t->LSP2 == INTPTR) {
@@ -656,7 +656,7 @@ static void TYP(struct DECCTX *d, SETOFSYS *FSYS, STP *FSP, ADDRRANGE *FSIZE)
                     ERROR(8);
                 SIMPLETYPE(FSYS, &t->LSP1, &t->LSIZE);
                 if (t->LSP1 != NULL) {
-                    if (t->LSP1->FORM > SUBRANGE || t->LSP1 == INTPTR || t->LSP1 == REALPTR) {
+                    if (t->LSP1->FORM > SUBRANGE || t->LSP1 == INTPTR || t->LSP1 == REALPTR || t->LSP1 == DOUBLEPTR) {
                         ERROR(115);
                         t->LSP1 = NULL;
                     } else if (t->LSP1 == REALPTR) {
@@ -1422,6 +1422,13 @@ static void PROCDECLARATION(struct DECCTX *d, SYMBOL FSY, BOOLEAN SEGDEC)
                         ERROR(120);
                         LCP->IDTYPE = NULL;
                     }
+                if (LSP == DOUBLEPTR) {         /* (not the Pascal's) a 4-word result: the parameters 2 words on */
+                    LC = LC + DOUBLESIZE - REALSIZE;
+                    LCP->U.P.LOCALLC = LCP->U.P.LOCALLC + DOUBLESIZE - REALSIZE;
+                    for (LCP1 = LCP->NEXT; LCP1 != NULL; LCP1 = LCP1->NEXT)
+                        if (LCP1->KLASS == ACTUALVARS || LCP1->KLASS == FORMALVARS)
+                            LCP1->U.V.VADDR = LCP1->U.V.VADDR + DOUBLESIZE - REALSIZE;
+                }
                 INSYMBOL();
             } else {
                 ERROR(2);

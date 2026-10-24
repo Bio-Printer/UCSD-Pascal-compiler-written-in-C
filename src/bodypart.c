@@ -278,11 +278,342 @@ static void PUTLABEL(LBP FLBP)
     IC = FLBP->OCCURIC;
 }
 
+/* ======================== DOUBLE (not the Pascal's) ========================
+   IEEE binary64, 4 words, done by the emulator's CSPs 100..137 (CSP 100 DADD
+   ...): a segment of its own, called only when a DOUBLE is there.  A REAL
+   literal or constant keeps the same number as a DOUBLE (RD.D, made from its
+   digits), so it is exact where it meets one; 1.5D0 is a DOUBLE. */
+#pragma segment DOUBLES
+
+#define DWTEMP (1 + 21)                 /* WRITE's temporary: the width, a STRING[40] */
+
+static void GENDLDC(WORD *D)            /* LDC 4: a DOUBLE, its last word first */
+{
+    INTEGER J;
+    GENBYTE(51 + 128);
+    GENBYTE(DOUBLESIZE);
+    for (J = DOUBLESIZE - 1; J >= 0; J--)
+        GENWORD(D[J]);
+}
+
+static void GENDHALF(void)              /* LDC 4: 0.5 */
+{
+    WORD D[DOUBLESIZE];
+    D[0] = D[1] = D[2] = 0;
+    D[3] = 0x3FE0;
+    GENDLDC(D);
+}
+
+/* N words of the frame for a while: the first of them (LC := the result when
+   done with them) */
+static ADDRRANGE DBLTEMP(INTEGER N)
+{
+    ADDRRANGE T;
+    T = LC;
+    LC = LC + N;
+    if (LC > LCMAX)
+        LCMAX = LC;
+    return T;
+}
+
+static void DBLPOP(ADDRRANGE T, INTEGER N)      /* the N words on top into T, T+1 ...: STR (STL) */
+{
+    INTEGER I;
+    for (I = 0; I < N; I++)
+        GEN2(56, 0, T + I);
+}
+
+static void DBLPUSH(ADDRRANGE T)                /* LDA (LLA) T, LDM 4 */
+{
+    GEN2(50, 0, T);
+    GEN1(60, DOUBLESIZE);
+}
+
+#define ISDBL2(a, b) ((a) == DOUBLEPTR || (b) == DOUBLEPTR)
+
+static void DBLCST(void)                /* a REAL constant where a DOUBLE is: its DOUBLE */
+{
+    if (GATTR.KIND == CST && GATTR.TYPTR == REALPTR)
+        GATTR.TYPTR = DOUBLEPTR;
+}
+
+static INTEGER DBLREL(OPERATOR LOP)     /* DCMP's relation: 0 = 1 <> 2 < 3 <= 4 > 5 >= */
+{
+    switch (LOP) {
+    case LTOP: return 2;
+    case LEOP: return 3;
+    case GTOP: return 4;
+    case GEOP: return 5;
+    case NEOP: return 1;
+    }
+    return 0;
+}
+
+/* GATTR, loaded, as a DOUBLE: an INTEGER or a REAL widens (ITOD, FTOD);
+   FALSE if it is no number */
+static BOOLEAN TODBL(void)
+{
+    if (GATTR.TYPTR == INTPTR)
+        GENCSP(108);                            /* ITOD */
+    else if (GATTR.TYPTR == REALPTR)
+        GENCSP(106);                            /* FTOD */
+    else
+        return GATTR.TYPTR == DOUBLEPTR;
+    GATTR.TYPTR = DOUBLEPTR;
+    return TRUE;
+}
+
+/* a binary operator's operands, the right one (GATTR) on top, one of them a
+   DOUBLE: both become DOUBLEs.  The left one is under the right one: the
+   right one goes to a temporary while it widens (a REAL constant is replaced
+   by its DOUBLE, LCST), and comes back.  FALSE if one is no number */
+static BOOLEAN DBLBOTH(STP *FSP, CSP LCST)
+{
+    ADDRRANGE T;
+    if (*FSP != DOUBLEPTR && *FSP != INTPTR && *FSP != REALPTR)
+        return FALSE;
+    if (!TODBL())
+        return FALSE;
+    if (*FSP != DOUBLEPTR) {
+        T = DBLTEMP(DOUBLESIZE + REALSIZE);
+        DBLPOP(T, DOUBLESIZE);
+        if (LCST != NULL) {
+            DBLPOP(T + DOUBLESIZE, REALSIZE);
+            GENDLDC(LCST->U.RD.D);
+        } else if (*FSP == INTPTR)
+            GENCSP(108);                        /* ITOD */
+        else
+            GENCSP(106);                        /* FTOD */
+        DBLPUSH(T);
+        LC = T;
+        *FSP = DOUBLEPTR;
+    }
+    return TRUE;
+}
+
+/* -C of a REAL or DOUBLE constant: a new constant.  A REAL one is still
+   loaded as the Pascal does it, LDC C then NGR (NREEL); its DOUBLE is -C */
+static void DBLNEG(void)
+{
+    CSP P;
+    P = NEWCONST(RD);
+    P->CCLASS = GATTR.CVAL.VALP->CCLASS == REEL ? NREEL : GATTR.CVAL.VALP->CCLASS;
+    P->U.RD = GATTR.CVAL.VALP->U.RD;
+    P->U.RD.D[3] = P->U.RD.D[3] ^ 0x8000;
+    GATTR.CVAL.VALP = P;
+}
+
+/* a standard function (CSP 24..31) of a DOUBLE: its DOUBLE CSP; ROUND
+   inline: TRUNC(X + 1 - 0.5) or TRUNC(X - 0.5) as X's sign is + or - */
+static void DBLSTD(INTEGER N)
+{
+    ADDRRANGE T;
+    GATTR.TYPTR = DOUBLEPTR;
+    switch (N) {
+    case 24:                                    /* ROUND */
+        T = DBLTEMP(DOUBLESIZE);
+        DBLPOP(T, DOUBLESIZE);
+        DBLPUSH(T);
+        GEN2(54, 0, T + 3);                     /* LOD (LDL): the sign word */
+        GENLDC(0);
+        GEN0(68);                               /* GEQI */
+        GENCSP(108);                            /* ITOD */
+        GENCSP(100);                            /* DADD */
+        GENDHALF();
+        GENCSP(101);                            /* DSUB */
+        GENCSP(109);                            /* DTOI */
+        LC = T;
+        GATTR.TYPTR = INTPTR;
+        break;
+    case 25: GENCSP(113); break;                /* SIN: DSIN */
+    case 26: GENCSP(114); break;                /* COS: DCOS */
+    case 27: GENCSP(122); break;                /* LOG: DLOG10 */
+    case 28: GENCSP(118); break;                /* ATAN: DATAN */
+    case 29: GENCSP(121); break;                /* LN: DLN */
+    case 30: GENCSP(120); break;                /* EXP: DEXP */
+    case 31: GENCSP(112); break;                /* SQRT: DSQRT */
+    }
+}
+
+static void DBLSQR(void)                        /* SQR: X * X */
+{
+    ADDRRANGE T;
+    T = DBLTEMP(DOUBLESIZE);
+    DBLPOP(T, DOUBLESIZE);
+    DBLPUSH(T);
+    DBLPUSH(T);
+    GENCSP(102);                                /* DMUL */
+    LC = T;
+}
+
+/* WRITE of a DOUBLE: the value and then the width (none: DEFAULT) are on
+   the stack.  Its text: CSP 133 (DTOA: X, 'f' and the fraction digits after
+   :W:F, else 'e' and 15 -- 16 significant digits) into a STRING[40] in the
+   temporary T, its length by SCAN; written by FWRITESTRING in the width, or
+   as it is when that is less (FRAC: :F follows) */
+static void DBLWRITE1(ADDRRANGE T, BOOLEAN DEFAULT, BOOLEAN FRAC)
+{
+    if (!DEFAULT)
+        GEN2(56, 0, T);                         /* STR: the width */
+    if (FRAC)
+        GENLDC('f');
+    else {
+        GENLDC('e');
+        GENLDC(15);
+    }
+}
+
+static void DBLWRITE2(ADDRRANGE T, BOOLEAN DEFAULT)
+{
+    ADDRRANGE S;
+    S = T + 1;
+    GEN2(50, 0, S);                             /* LDA: S[1] */
+    GENLDC(1);
+    GEN0(2);                                    /* ADI */
+    GENCSP(133);                                /* DTOA */
+    GEN2(50, 0, S);                             /* S[0] := SCAN(41, = CHR(0), S[1]) */
+    GENLDC(0);
+    GENLDC(41);
+    GENLDC(0);
+    GENLDC(0);
+    GEN2(50, 0, S);
+    GENLDC(1);
+    GENLDC(0);
+    GENCSP(11);                                 /* SCN */
+    GEN0(63);                                   /* STB */
+    GEN2(50, 0, S);                             /* FWRITESTRING(F, S, W * ORD(W > LENGTH(S))) */
+    if (DEFAULT)
+        GENLDC(0);
+    else {
+        GEN2(54, 0, T);
+        GEN2(54, 0, T);
+        GEN2(50, 0, S);
+        GENLDC(0);
+        GEN0(62);                               /* LDB */
+        GEN0(69);                               /* GRTI */
+        GEN0(15);                               /* MPI */
+    }
+    GENSYS(19);                                 /* CXP SYS FWRS */
+    if (IC + 100 > MAXCODE) {                   /* (as STATEMENT checks: a WRITE of DOUBLEs is long) */
+        ERROR(253);
+        IC = 0;
+    }
+}
+
+static void DBLWINDOW(ADDRRANGE F)              /* F^: FWINDOW^[0] */
+{
+    GEN2(54, 0, F);
+    GEN1(35, 0);                                /* IND */
+    GENLDC(0);
+    GEN0(62);                                   /* LDB */
+}
+
+static void DBLNOTEOF(ADDRRANGE F)              /* ... AND NOT FEOF */
+{
+    GEN2(54, 0, F);
+    GEN1(35, 1);                                /* IND */
+    GEN0(19);                                   /* NOT */
+    GEN0(4);                                    /* AND */
+}
+
+/* READ of a DOUBLE, the file's and the variable's addresses on the stack:
+   as FREADREAL reads a REAL, but the number's characters (digits, + - . E e)
+   go into a STRING[40] and CSP 135 (ATODM: C's strtod) makes the DOUBLE --
+   the character after them stays in the window, F^.  The FIB: F^ is
+   FWINDOW^[0] (word 0), FEOF word 1, FSTATE word 3 (FNEEDCHAR = 1) */
+static void DBLREAD(void)
+{
+    ADDRRANGE T, F, A, N, S;
+    LBP L1, L2, L3, L4, L5;
+    T = DBLTEMP(3 + 21);
+    F = T;
+    A = T + 1;
+    N = T + 2;
+    S = T + 3;
+    GEN2(56, 0, A);                             /* STR: the variable's address */
+    GEN2(56, 0, F);                             /* STR: the file's */
+    GEN2(54, 0, F);                             /* IF FSTATE = FNEEDCHAR THEN FGET(F) */
+    GEN1(35, 3);                                /* IND */
+    GENLDC(1);
+    GEN0(67);                                   /* EQUI */
+    GENLABEL(&L1);
+    GENJMP(33, L1);                             /* FJP */
+    GEN2(54, 0, F);
+    GENSYS(7);                                  /* CXP SYS FGET */
+    PUTLABEL(L1);
+    GENLABEL(&L2);                              /* WHILE (F^ = ' ') AND NOT FEOF DO FGET(F) */
+    PUTLABEL(L2);
+    DBLWINDOW(F);
+    GENLDC(' ');
+    GEN0(67);                                   /* EQUI */
+    DBLNOTEOF(F);
+    GENLABEL(&L3);
+    GENJMP(33, L3);
+    GEN2(54, 0, F);
+    GENSYS(7);
+    GENJMP(57, L2);                             /* UJP */
+    PUTLABEL(L3);
+    GENLDC(0);                                  /* N := 0 */
+    GEN2(56, 0, N);
+    GENLABEL(&L4);                              /* WHILE (F^ IN NUMBER) AND NOT FEOF AND (N < 40) DO */
+    PUTLABEL(L4);
+    DBLWINDOW(F);
+    GENBYTE(51 + 128);                          /* LDC: ['+', '-', '.', '0'..'9', 'E', 'e'] */
+    GENBYTE(7);
+    GENWORD(0x0020);                            /* (word 6: 'e' = 101) */
+    GENWORD(0);
+    GENWORD(0x0020);                            /* (word 4: 'E' = 69) */
+    GENWORD(0x03FF);                            /* (word 3: '0'..'9' = 48..57) */
+    GENWORD(0x6800);                            /* (word 2: '+' 43, '-' 45, '.' 46) */
+    GENWORD(0);
+    GENWORD(0);
+    GENLDC(7);
+    GEN0(11);                                   /* INN */
+    DBLNOTEOF(F);
+    GEN2(54, 0, N);
+    GENLDC(40);
+    GEN0(73);                                   /* LESI */
+    GEN0(4);                                    /* AND */
+    GENLABEL(&L5);
+    GENJMP(33, L5);
+    GEN2(54, 0, N);                             /* N := N + 1; S[N] := F^; FGET(F) */
+    GENLDC(1);
+    GEN0(2);                                    /* ADI */
+    GEN2(56, 0, N);
+    GEN2(50, 0, S);
+    GEN2(54, 0, N);
+    DBLWINDOW(F);
+    GEN0(63);                                   /* STB */
+    GEN2(54, 0, F);
+    GENSYS(7);
+    GENJMP(57, L4);
+    PUTLABEL(L5);
+    GEN2(50, 0, S);                             /* S[N + 1] := CHR(0) */
+    GEN2(54, 0, N);
+    GENLDC(1);
+    GEN0(2);
+    GENLDC(0);
+    GEN0(63);
+    GEN2(50, 0, S);                             /* ATODM(S[1], the variable) */
+    GENLDC(1);
+    GEN0(2);
+    GEN2(54, 0, A);
+    GENCSP(135);
+    GEN2(56, 0, N);                             /* (the characters it used: not needed) */
+    LC = T;
+}
+
+#pragma segment BODYPART
+
+static CSP LASTRCST;                    /* LOAD's REAL constant (DBLBOTH), or NIL */
+
+
 static void LOAD(void)
 {
     INTEGER J, M;
     CSP P;
     STP T;
+    LASTRCST = NULL;
     if (GATTR.TYPTR != NULL) {
         switch (GATTR.KIND) {
         case CST:
@@ -306,12 +637,19 @@ static void LOAD(void)
                     GENLDC(2);                  /* DAD */
                     GENNR(DECOPS);
                 }
-            } else if (GATTR.TYPTR->FORM == SCALAR && GATTR.TYPTR != REALPTR)
+            } else if (GATTR.TYPTR->FORM == SCALAR && GATTR.TYPTR != REALPTR && GATTR.TYPTR != DOUBLEPTR)
                 GENLDC(GATTR.CVAL.IVAL);
             else if (GATTR.TYPTR == NILPTR)
                 GEN0(31);                       /* LDCN */
-            else if (GATTR.TYPTR == REALPTR)
+            else if (GATTR.TYPTR == REALPTR) {
+                LASTRCST = GATTR.CVAL.VALP;
                 GEN1(51, 2);                    /* LDC */
+                if (LASTRCST->CCLASS == NREEL)
+                    GEN0(18);                   /* NGR */
+                GATTR.KIND = EXPR;
+                return;
+            } else if (GATTR.TYPTR == DOUBLEPTR)
+                GENDLDC(GATTR.CVAL.VALP->U.RD.D);
             else
                 GEN1(51, 5);                    /* LDC */
             break;
@@ -747,7 +1085,7 @@ static void NEWSTMT(struct CALLCTX *c)
         else if (LSP->FORM != TAGFLD)
             ERROR(162);
         else if (LSP->U.TF.TAGFIELDP != NULL) {
-            if (STRGTYPE(LSP1) || LSP1 == REALPTR)
+            if (STRGTYPE(LSP1) || LSP1 == REALPTR || LSP1 == DOUBLEPTR)
                 ERROR(159);
             else if (COMPTYPES(LSP->U.TF.TAGFIELDP->IDTYPE, LSP1)) {
                 LSP1 = LSP->U.TF.FSTVAR;
@@ -1186,6 +1524,8 @@ static void READSTMT(struct CALLCTX *c)         /* READ */
                     GENSYS(12);                 /* CXP SYS FRDI */
                 else if (COMPTYPES(REALPTR, GATTR.TYPTR))
                     GENNR(FREADREAL);
+                else if (GATTR.TYPTR == DOUBLEPTR)
+                    DBLREAD();
                 else if (COMPTYPES(LONGINTPTR, GATTR.TYPTR)) {
                     GENLDC(GATTR.TYPTR->SIZE);
                     GENNR(FREADDEC);
@@ -1214,6 +1554,7 @@ static void WRITESTMT(struct CALLCTX *c)        /* WRITE */
 {
     STP LSP;
     BOOLEAN DEFAULT;
+    ADDRRANGE T;
     CTP FILEPTR;
     INTEGER LMIN, LMAX;
     SETS s, f;
@@ -1261,6 +1602,16 @@ static void WRITESTMT(struct CALLCTX *c)        /* WRITE */
                 } else
                     GENLDC(0);
                 GENNR(FWRITEREAL);
+            } else if (LSP == DOUBLEPTR) {
+                T = DBLTEMP(DWTEMP);
+                DBLWRITE1(T, DEFAULT, SY == COLON);
+                if (SY == COLON) {
+                    INSYMBOL();
+                    LOADEXPR(SETADD(&s, c->FSYS, COMMA, RPARENT, SETEND));
+                    CHECKINT();
+                }
+                DBLWRITE2(T, DEFAULT);
+                LC = T;
             } else if (COMPTYPES(LSP, LONGINTPTR)) {
                 if (DEFAULT)
                     GENLDC(0);
@@ -1302,11 +1653,12 @@ static void CALLNONSPECIAL(struct CALLCTX *c)
 {
     CTP NXT, FCP;
     STP LSP;
-    BOOLEAN LB;
+    BOOLEAN LB, DARG;
     INTEGER LMIN, LMAX;
     SETS s;
     FCP = c->FCP;
     NXT = FCP->NEXT;
+    DARG = FALSE;                               /* a standard REAL function of a DOUBLE */
     if (FCP->U.P.PFDECKIND == DECLARED)
         if (FCP->U.P.PFKIND != ACTUAL)
             ERROR(400);
@@ -1322,6 +1674,8 @@ static void CALLNONSPECIAL(struct CALLCTX *c)
                     if (NXT->KLASS == ACTUALVARS) {
                         if (GATTR.TYPTR->FORM <= POWER) {
                             LB = GATTR.TYPTR == CHARPTR && GATTR.KIND == CST;
+                            if (LSP == DOUBLEPTR)
+                                DBLCST();
                             LOAD();
                             if (LSP->FORM == POWER)
                                 GEN1(32, LSP->SIZE);    /* ADJ */
@@ -1338,6 +1692,11 @@ static void CALLNONSPECIAL(struct CALLCTX *c)
                                 GENLDC(LSP->U.SR.MIN.IVAL);
                                 GENLDC(LSP->U.SR.MAX.IVAL);
                                 GEN0(8);                /* CHK */
+                            } else if (LSP == DOUBLEPTR)
+                                TODBL();
+                            else if (GATTR.TYPTR == DOUBLEPTR && LSP == REALPTR && FCP->U.P.PFDECKIND == STANDARD) {
+                                DARG = TRUE;
+                                GATTR.TYPTR = REALPTR;
                             } else if (GATTR.TYPTR == INTPTR && COMPTYPES(LSP, REALPTR)) {
                                 GEN0(10);               /* FLT */
                                 GATTR.TYPTR = REALPTR;
@@ -1387,6 +1746,10 @@ static void CALLNONSPECIAL(struct CALLCTX *c)
         if (FCP->KLASS == FUNC) {
             GENLDC(0);
             GENLDC(0);
+            if (FCP->IDTYPE == DOUBLEPTR) {     /* (its result is 4 words) */
+                GENLDC(0);
+                GENLDC(0);
+            }
         }
         if (INMODULE) {
             if (SEPPROC) {
@@ -1415,6 +1778,9 @@ static void CALLNONSPECIAL(struct CALLCTX *c)
             else
                 GEN1(46, FCP->U.P.PFNAME);      /* CIP */
         }
+    } else if (DARG) {
+        DBLSTD(FCP->U.P.CSPNUM);
+        return;
     } else if (FCP->U.P.CSPNUM == 23)
         GENCSP(40);                           /* (temporary I.5 translation: MEM will be CSP 23 in II.0) */
     else if (FCP->U.P.CSPNUM != 21 && FCP->U.P.CSPNUM != 22)
@@ -1449,7 +1815,7 @@ static void CALL(SETOFSYS *FSYS, CTP FCP)
             ERROR(9);
         switch (LKEY) {
         case 7: case 8: case 9: case 10: case 11: case 13: case 14:
-        case 25: case 36: case 39: case 42:
+        case 25: case 36: case 39: case 42: case 44:
             LOADEXPR(SETADD(&s, FSYS, COMMA, RPARENT, SETEND));
             break;
         }
@@ -1487,7 +1853,7 @@ static void CALL(SETOFSYS *FSYS, CTP FCP)
         case 7: case 8:                         /* PRED, SUCC */
             GENLDC(1);
             if (GATTR.TYPTR != NULL) {
-                if (GATTR.TYPTR->FORM == SCALAR) {
+                if (GATTR.TYPTR->FORM == SCALAR && GATTR.TYPTR != DOUBLEPTR) {
                     if (LKEY == 8)
                         GEN0(2);                /* ADI */
                     else
@@ -1498,7 +1864,7 @@ static void CALL(SETOFSYS *FSYS, CTP FCP)
             break;
         case 9:                                 /* ORD */
             if (GATTR.TYPTR != NULL)
-                if (GATTR.TYPTR->FORM >= POWER)
+                if (GATTR.TYPTR->FORM >= POWER || GATTR.TYPTR == DOUBLEPTR)
                     ERROR(125);
             GATTR.TYPTR = INTPTR;
             break;
@@ -1508,6 +1874,8 @@ static void CALL(SETOFSYS *FSYS, CTP FCP)
                     GEN0(24);                   /* SQI */
                 else if (GATTR.TYPTR == REALPTR)
                     GEN0(25);                   /* SQR */
+                else if (GATTR.TYPTR == DOUBLEPTR)
+                    DBLSQR();
                 else {
                     ERROR(125);
                     GATTR.TYPTR = INTPTR;
@@ -1520,6 +1888,8 @@ static void CALL(SETOFSYS *FSYS, CTP FCP)
                     GEN0(0);                    /* ABI */
                 else if (GATTR.TYPTR == REALPTR)
                     GEN0(1);                    /* ABR */
+                else if (GATTR.TYPTR == DOUBLEPTR)
+                    GENCSP(126);                /* DFABS */
                 else {
                     ERROR(125);
                     GATTR.TYPTR = INTPTR;
@@ -1600,6 +1970,8 @@ static void CALL(SETOFSYS *FSYS, CTP FCP)
             if (GATTR.TYPTR != NULL) {
                 if (GATTR.TYPTR == REALPTR)
                     GENCSP(23);                 /* CSP TRUNC (temporary: TRUNC will be CSP 14 in II.0) */
+                else if (GATTR.TYPTR == DOUBLEPTR)
+                    GENCSP(109);                /* DTOI */
                 else if (GATTR.TYPTR->FORM == LONGINT) {
                     GENLDC(20);                 /* DTNC */
                     GENNR(DECOPS);
@@ -1607,6 +1979,15 @@ static void CALL(SETOFSYS *FSYS, CTP FCP)
                     ERROR(125);
             }
             GATTR.TYPTR = INTPTR;
+            break;
+        case 44:                                /* SNGL (not the Pascal's): a DOUBLE as a REAL */
+            if (GATTR.TYPTR == DOUBLEPTR)
+                GENCSP(107);                    /* DTOF */
+            else if (GATTR.TYPTR == INTPTR)
+                GEN0(10);                       /* FLT */
+            else if (GATTR.TYPTR != REALPTR && GATTR.TYPTR != NULL)
+                ERROR(125);
+            GATTR.TYPTR = REALPTR;
             break;
         }
         if (c->WASLPARENT) {
@@ -1692,7 +2073,7 @@ static void FACTOR(SETOFSYS *FSYS)
             INSYMBOL();
             break;
         case REALCONST:
-            GATTR.TYPTR = REALPTR;
+            GATTR.TYPTR = VAL.VALP->CCLASS == DREEL ? DOUBLEPTR : REALPTR;
             GATTR.KIND = CST;
             GATTR.CVAL = VAL;
             INSYMBOL();
@@ -1849,16 +2230,27 @@ static void TERM(SETOFSYS *FSYS)
 {
     ATTR LATTR;
     OPERATOR LOP;
+    CSP LCST;
     SETS s;
     FACTOR(SETADD(&s, FSYS, MULOP, SETEND));
     while (SY == MULOP) {
         LOAD();
         LATTR = GATTR;
+        LCST = LASTRCST;
         LOP = OP;
         INSYMBOL();
         FACTOR(&s);
+        if (LATTR.TYPTR == DOUBLEPTR)
+            DBLCST();
         LOAD();
-        if (LATTR.TYPTR != NULL && GATTR.TYPTR != NULL)
+        if (ISDBL2(LATTR.TYPTR, GATTR.TYPTR) && (LOP == MUL || LOP == RDIV)) {
+            if (DBLBOTH(&LATTR.TYPTR, LCST))
+                GENCSP(LOP == MUL ? 102 : 103); /* DMUL DDIV */
+            else {
+                ERROR(134);
+                GATTR.TYPTR = NULL;
+            }
+        } else if (LATTR.TYPTR != NULL && GATTR.TYPTR != NULL)
             switch (LOP) {
             case MUL:
                 FLOATIT(&LATTR.TYPTR, FALSE);
@@ -1925,6 +2317,7 @@ static void SIMPLEEXPRESSION(SETOFSYS *FSYS)
     ATTR LATTR;
     OPERATOR LOP;
     BOOLEAN SIGNED;
+    CSP LCST;
     SETS s;
     SIGNED = FALSE;
     if (SY == ADDOP && (OP == PLUS || OP == MINUS)) {
@@ -1932,12 +2325,16 @@ static void SIMPLEEXPRESSION(SETOFSYS *FSYS)
         INSYMBOL();
     }
     TERM(SETADD(&s, FSYS, ADDOP, SETEND));
-    if (SIGNED) {
+    if (SIGNED && GATTR.KIND == CST && (GATTR.TYPTR == REALPTR || GATTR.TYPTR == DOUBLEPTR))
+        DBLNEG();                               /* (a REAL one: loaded as LDC C, NGR) */
+    else if (SIGNED) {
         LOAD();
         if (GATTR.TYPTR == INTPTR)
             GEN0(17);                           /* NGI */
         else if (GATTR.TYPTR == REALPTR)
             GEN0(18);                           /* NGR */
+        else if (GATTR.TYPTR == DOUBLEPTR)
+            GENCSP(104);                        /* DNEG */
         else if (FORMOF(GATTR.TYPTR) == LONGINT) {
             GENLDC(6);                          /* DNG */
             GENNR(DECOPS);
@@ -1949,11 +2346,21 @@ static void SIMPLEEXPRESSION(SETOFSYS *FSYS)
     while (SY == ADDOP) {
         LOAD();
         LATTR = GATTR;
+        LCST = LASTRCST;
         LOP = OP;
         INSYMBOL();
         TERM(&s);
+        if (LATTR.TYPTR == DOUBLEPTR)
+            DBLCST();
         LOAD();
-        if (LATTR.TYPTR != NULL && GATTR.TYPTR != NULL)
+        if (ISDBL2(LATTR.TYPTR, GATTR.TYPTR) && (LOP == PLUS || LOP == MINUS)) {
+            if (DBLBOTH(&LATTR.TYPTR, LCST))
+                GENCSP(LOP == PLUS ? 100 : 101); /* DADD DSUB */
+            else {
+                ERROR(134);
+                GATTR.TYPTR = NULL;
+            }
+        } else if (LATTR.TYPTR != NULL && GATTR.TYPTR != NULL)
             switch (LOP) {
             case PLUS:
                 FLOATIT(&LATTR.TYPTR, FALSE);
@@ -2017,6 +2424,7 @@ static void MAKEPA(STP *STRGFSP, STP PAFSP)
 /* EXPRESSION: the value as an operand of a comparison */
 static void OPERAND(void)
 {
+    LASTRCST = NULL;
     if (GATTR.TYPTR != NULL) {
         if (GATTR.TYPTR->FORM <= POWER)
             LOAD();
@@ -2033,19 +2441,29 @@ static void EXPRESSION(SETOFSYS *FSYS)
     ADDRRANGE LSTRGIC, LSIZE;
     BOOLEAN LSTRING, GSTRING;
     INTEGER LMIN, LMAX;
+    CSP LCST;
     SETS s;
     SIMPLEEXPRESSION(SETADD(&s, FSYS, RELOP, SETEND));
     if (SY == RELOP) {
         LSTRING = GATTR.KIND == CST && (STRGTYPE(GATTR.TYPTR) || GATTR.TYPTR == CHARPTR);
         OPERAND();
         LATTR = GATTR;
+        LCST = LASTRCST;
         LOP = OP;
         LSTRGIC = STRGCSTIC;
         INSYMBOL();
         SIMPLEEXPRESSION(FSYS);
         GSTRING = GATTR.KIND == CST && (STRGTYPE(GATTR.TYPTR) || GATTR.TYPTR == CHARPTR);
+        if (LATTR.TYPTR == DOUBLEPTR)
+            DBLCST();
         OPERAND();
-        if (LATTR.TYPTR != NULL && GATTR.TYPTR != NULL) {
+        if (ISDBL2(LATTR.TYPTR, GATTR.TYPTR) && LOP != INOP) {
+            if (DBLBOTH(&LATTR.TYPTR, LCST)) {
+                GENLDC(DBLREL(LOP));
+                GENCSP(105);                    /* DCMP */
+            } else
+                ERROR(129);
+        } else if (LATTR.TYPTR != NULL && GATTR.TYPTR != NULL) {
             if (LOP == INOP) {
                 if (GATTR.TYPTR->FORM == POWER) {
                     if (COMPTYPES(LATTR.TYPTR, GATTR.TYPTR->U.ELSET))
@@ -2196,7 +2614,11 @@ static void ASSIGNMENT(SETOFSYS *FSYS, CTP FCP)
         EXPRESSION(FSYS);
         if (GATTR.KIND == CST)
             CSTRING = GATTR.TYPTR == CHARPTR || STRGTYPE(GATTR.TYPTR);
+        if (LATTR.TYPTR == DOUBLEPTR)
+            DBLCST();
         OPERAND();
+        if (LATTR.TYPTR == DOUBLEPTR && GATTR.TYPTR != NULL)
+            TODBL();
         if (LATTR.TYPTR != NULL && GATTR.TYPTR != NULL) {
             if (GATTR.TYPTR == INTPTR)
                 if (COMPTYPES(REALPTR, LATTR.TYPTR)) {
@@ -2389,7 +2811,7 @@ static void CASESTATEMENT(SETOFSYS *FSYS)
     GENJMP(57, LCIX);                           /* UJP */
     LSP = GATTR.TYPTR;
     if (LSP != NULL)
-        if (LSP->FORM != SCALAR || LSP == REALPTR) {
+        if (LSP->FORM != SCALAR || LSP == REALPTR || LSP == DOUBLEPTR) {
             ERROR(144);
             LSP = NULL;
         }
@@ -2531,7 +2953,7 @@ static void FORSTATEMENT(SETOFSYS *FSYS)
             LATTR.TYPTR = NULL;
         }
         if (LATTR.TYPTR != NULL)
-            if (LATTR.TYPTR->FORM > SUBRANGE || COMPTYPES(REALPTR, LATTR.TYPTR)) {
+            if (LATTR.TYPTR->FORM > SUBRANGE || COMPTYPES(REALPTR, LATTR.TYPTR) || LATTR.TYPTR == DOUBLEPTR) {
                 ERROR(143);
                 LATTR.TYPTR = NULL;
             }

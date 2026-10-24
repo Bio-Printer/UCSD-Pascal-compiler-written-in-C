@@ -223,7 +223,7 @@ l1:
 static void NUMBER(void)
 {
     INTEGER ENDI, ENDF, ENDE, SIGN, IPART, FPART, EPART, ISUM;
-    INTEGER TIPE;                                       /* 0 REALTIPE, 1 INTEGERTIPE */
+    INTEGER TIPE;                                       /* 0 REALTIPE, 1 INTEGERTIPE, 2 a DOUBLE (1.5D0) */
     BOOLEAN NOTLONG;
     INTEGER K, J;
     /* takes a number and decides whether it's real or integer and converts it
@@ -253,8 +253,8 @@ static void NUMBER(void)
                 ERROR(201);
             ENDF = SYMCURSOR - 1;
         }
-    if (SYMBUFP[SYMCURSOR] == 'E') {
-        TIPE = 0;
+    if (SYMBUFP[SYMCURSOR] == 'E' || SYMBUFP[SYMCURSOR] == 'D') {
+        TIPE = SYMBUFP[SYMCURSOR] == 'D' ? 2 : 0;
         SYMCURSOR = SYMCURSOR + 1;
         if (SYMBUFP[SYMCURSOR] == '-') {
             SYMCURSOR = SYMCURSOR + 1;
@@ -286,7 +286,7 @@ static void NUMBER(void)
         } else
             LONGNUMBER(IPART, ENDI, K, ISUM);
     } else                                              /* a real number */
-        REALNUMBER(IPART, ENDI, FPART, ENDF, EPART, ENDE, SIGN);
+        REALNUMBER(IPART, ENDI, FPART, ENDF, EPART, ENDE, SIGN, SYMCURSOR - 1, TIPE == 2);
     SYMCURSOR = SYMCURSOR - 1;                          /* adjust for posterity */
 }
 
@@ -557,11 +557,13 @@ void CONSTANT(SETOFSYS *FSYS, STP *FSP, VALU *FVALU)
                     if (LSP == INTPTR) {
                         if (SIGN == 2)
                             FVALU->IVAL = -FVALU->IVAL;
-                    } else if (LSP == REALPTR) {
+                    } else if (LSP == REALPTR || LSP == DOUBLEPTR) {
                         if (SIGN == 2) {
-                            LVP = NEWCONST(RVAL);    /* NEW(LVP, REEL) */
-                            LVP->CCLASS = REEL;
-                            LVP->U.RVAL = RNEG(FVALU->VALP->U.RVAL);
+                            LVP = NEWCONST(RD);      /* NEW(LVP, REEL), and its DOUBLE */
+                            LVP->CCLASS = FVALU->VALP->CCLASS;
+                            LVP->U.RD = FVALU->VALP->U.RD;
+                            LVP->U.RVAL = RNEG(LVP->U.RVAL);
+                            LVP->U.RD.D[3] = LVP->U.RD.D[3] ^ 0x8000;
                             FVALU->VALP = LVP;
                         }
                     } else if (COMPTYPES(LSP, LONGINTPTR)) {
@@ -582,9 +584,11 @@ void CONSTANT(SETOFSYS *FSYS, STP *FSP, VALU *FVALU)
                 *FVALU = VAL;
                 INSYMBOL();
             } else if (SY == REALCONST) {
-                if (SIGN == 2)
+                if (SIGN == 2) {
                     VAL.VALP->U.RVAL = RNEG(VAL.VALP->U.RVAL);
-                LSP = REALPTR;
+                    VAL.VALP->U.RD.D[3] = VAL.VALP->U.RD.D[3] ^ 0x8000;
+                }
+                LSP = VAL.VALP->CCLASS == DREEL ? DOUBLEPTR : REALPTR;
                 *FVALU = VAL;
                 INSYMBOL();
             } else if (SY == LONGCONST) {

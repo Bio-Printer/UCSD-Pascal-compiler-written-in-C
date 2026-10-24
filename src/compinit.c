@@ -16,6 +16,8 @@ static void ENTSTDTYPES(void)
     INTPTR->SIZE = INTSIZE; INTPTR->FORM = SCALAR; INTPTR->U.SC.SCALKIND = STANDARD;
     REALPTR = NEWTYPE(SC);
     REALPTR->SIZE = REALSIZE; REALPTR->FORM = SCALAR; REALPTR->U.SC.SCALKIND = STANDARD;
+    DOUBLEPTR = NEWTYPE(SC);                      /* (not the Pascal's: IEEE binary64, the emulator's CSP 100..137) */
+    DOUBLEPTR->SIZE = DOUBLESIZE; DOUBLEPTR->FORM = SCALAR; DOUBLEPTR->U.SC.SCALKIND = STANDARD;
     LONGINTPTR = NEWTYPE0();
     LONGINTPTR->SIZE = DECSIZE((BITSPERWD - 1) * 100 / 332 + 1); LONGINTPTR->FORM = LONGINT;
     CHARPTR = NEWTYPE(SC);
@@ -62,6 +64,7 @@ static void ENTSTDNAMES(void)
     INTEGER I;
     ENTTYPE("INTEGER ", INTPTR);
     ENTTYPE("REAL    ", REALPTR);
+    ENTTYPE("DOUBLE  ", DOUBLEPTR);
     ENTTYPE("CHAR    ", CHARPTR);
     ENTTYPE("BOOLEAN ", BOOLPTR);
     ENTTYPE("STRING  ", STRGPTR);
@@ -144,14 +147,15 @@ static void ENTSPCPROCS(void)
         "CLOSE   ";
     const char *NA2 =
         "SEEK    RESET   GET     PUT     SCAN    BLOCKREA"
-        "BLOCKWRITRUNC   PAGE    SIZEOF  STR     GOTOXY  ";
+        "BLOCKWRITRUNC   PAGE    SIZEOF  STR     GOTOXY  "
+        "SNGL    ";
     SETS tinyset, funcs;
     CTP LCP;
     INTEGER I;
     BOOLEAN ISFUNC;
     SETOF(&tinyset, 2, 7, 8, 10, 13, 17, 18, 19, 20, 32, 34, 35, 40, 42, 43, SETEND);
-    SETOF(&funcs, 5, 6, 7, 8, 9, 10, 11, 15, 16, 19, 20, 25, 36, 37, 38, 39, 41, SETEND);
-    for (I = 1; I <= 43; I++) {
+    SETOF(&funcs, 5, 6, 7, 8, 9, 10, 11, 15, 16, 19, 20, 25, 36, 37, 38, 39, 41, 44, SETEND);
+    for (I = 1; I <= 44; I++) {
         if (TINY)
             if (IN(I, &tinyset))
                 continue;                       /* GOTO 1 */

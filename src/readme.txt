@@ -50,7 +50,22 @@ THE FILES
   PCIO_PSYS.C   the system's files: FINIT, FOPEN, FBLOCKIO, FCLOSE, the
                 listing by FWRITECHAR; the console
   PC_PSYS.C     PC NAME [CODE]: the command line
+  PI.TEXT       DOUBLE: pi by Archimedes' method (Tiny-C's PI.C)
+  DOUBLES.TEXT  DOUBLE: arithmetic, functions, WRITE, parameters
+  READTEST.TEXT DOUBLE: READ from the console and from a file
   FILES.TEXT    the list of the files
+
+DOUBLE
+
+PC has a type the Pascal compiler does not: DOUBLE, 8 bytes (IEEE
+binary64: 16 significant digits, exponents to 308), done by the emulator
+(its CSPs 100..137).  1.5D0 is a DOUBLE constant (D for E); a REAL
+constant (0.1) is made a DOUBLE from its digits where it meets one.
+INTEGER and REAL become DOUBLE by themselves; SNGL(D) is D as a REAL,
+TRUNC and ROUND give an INTEGER.  + - * /, the comparisons, ABS SQR SQRT
+SIN COS ATAN LN EXP LOG, WRITE(D:W:F) (F decimals), WRITE(D) (16 digits,
+3.141592653589793e+00) and READ(D) work as for a REAL; nothing is needed
+from SYSTEM.LIBRARY.  Try:  PC PI  then  PI.
 
 BUILDING IT
 
@@ -66,7 +81,7 @@ those of the Pascal compiler: COMPINIT, DECLARATIONPART and BODYPART are in
 memory only while they run, and a $S+ or a small memory makes them take
 turns (swapping); NOSWAP keeps both in when 20000 words are free.  The
 compiler's own source, the largest program here, compiles from the shell
-with 3777 words to spare.
+with 3434 words to spare.
 
 The C sources, the host build (the same compiler for Linux, with the
 P-machine's REAL arithmetic emulated) and the tests are in the repository

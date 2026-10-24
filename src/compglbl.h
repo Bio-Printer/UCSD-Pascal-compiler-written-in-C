@@ -35,6 +35,7 @@ typedef INTEGER BOOLEAN;
 #define MAXADDR 28000
 #define INTSIZE 1
 #define REALSIZE 2
+#define DOUBLESIZE 4
 #define BITSPERWD 16
 #define CHARSIZE 1
 #define BOOLSIZE 1
@@ -157,18 +158,22 @@ typedef INTEGER NONRESPFLIST[DECOPS + 1];
 #define STRG 2
 #define TRIX 3
 #define LONG 4
+#define DREEL 5                         /* a DOUBLE literal (1.5D0): REEL's record, RD.D the value */
+#define NREEL 6                         /* -C of a REAL C: loaded as LDC C, NGR; RD.D is -C */
 typedef INTEGER CSTCLASS;
 typedef struct CONSTREC *CSP;
 /* (each variant's type has a name, CST_<variant>, ST_..., ID_..., for NEWCONST,
    NEWTYPE, NEWID: their sizes) */
 typedef struct { INTEGER LLENG, LLAST; INTEGER LONGVAL[9 + 1]; } CST_L;   /* LONG ([1..9]) */
 typedef REAL CST_RVAL;                                                  /* REEL */
+typedef struct { REAL R; WORD D[4]; } CST_RD;   /* REEL, DREEL: the REAL and the DOUBLE (an 8-byte image) */
 struct CONSTREC {
     CSTCLASS CCLASS;
     union CSTVARIANT {
         CST_L L;
         INTEGER CSTVAL0[8];             /* TRIX: CSTVAL[1..8] (CSTVAL(P, I)): overlaps the following */
         CST_RVAL RVAL;
+        CST_RD RD;                      /* (RD.R is RVAL; RD.D the same number as a DOUBLE, exact from its digits) */
         WORD PVAL[8];                   /* PSET: SET OF 0..127, 16 members a word */
         struct { INTEGER SLGTH; CHAR SVAL[STRGLGTH + 1]; } S;  /* STRG ([1..STRGLGTH]) */
     } U;
@@ -371,7 +376,7 @@ extern BOOLEAN PRTERR, GOTOOK, RANGECHECK, DEBUGGING,
                DP, INCLUDING, USING, NOSWAP, SEPPROC,
                STARTINGUP, INMODULE, ININTERFACE, FLIPBYTES,
                LIBNOTOPEN, SYSCOMP, PUBLICPROCS, GETSTMTLEV;
-extern STP REALPTR, LONGINTPTR, CHARPTR, BOOLPTR, TEXTPTR, NILPTR, INTRACTVPTR, STRGPTR;
+extern STP REALPTR, DOUBLEPTR, LONGINTPTR, CHARPTR, BOOLPTR, TEXTPTR, NILPTR, INTRACTVPTR, STRGPTR;
 extern CTP UTYPPTR, UCSTPTR, UVARPTR, UFLDPTR, UPRCPTR, UFCTPTR,
            MODPTR, INPUTPTR, OUTPUTPTR, OUTERBLOCK, FWPTR, USINGLIST;
 extern TESTP GLOBTESTP;
@@ -496,8 +501,9 @@ void FINISHSEG(void);
 /* rare.c: what the compiler seldom does */
 INTEGER OPTIONS(CHAR STOPPER);
 void LONGNUMBER(INTEGER IPART, INTEGER ENDI, INTEGER K, INTEGER ISUM);
+void DBLTEXT(CHAR *TEXT, WORD *D);     /* rare.c: a number's text to a DOUBLE */
 void REALNUMBER(INTEGER IPART, INTEGER ENDI, INTEGER FPART, INTEGER ENDF,
-                INTEGER EPART, INTEGER ENDE, INTEGER SIGN);
+                INTEGER EPART, INTEGER ENDE, INTEGER SIGN, INTEGER ENDN, BOOLEAN ISDBL);
 void FINISHCOMPILE(void);
 void SCANSTRING(CHAR *FSTRG, INTEGER MAXLENG, CHAR STOPPER);    /* procs.c */
 
