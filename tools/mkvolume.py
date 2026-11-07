@@ -3,8 +3,8 @@
 at most 7 characters), laid out as TINY-C: is, in sub-volumes:
 
   PC.CODE, README.TEXT, FILES.TEXT   the compiler (build/psys/PC.CODE, make psys)
-  SRC/     its P-System sources as text files, and BUILD.TEXT (CC @PASCALC:/SRC/BUILD)
-  OBJ/     empty: the objects BUILD makes (-O PASCALC:/OBJ)
+  SRC/     its P-System sources as text files, and MAKEFILE.TEXT (MAKE -f PASCALC:/SRC/MAKEFILE)
+  OBJ/     empty: the objects the makefile makes (-O PASCALC:/OBJ)
   DEMOS/   programs to try (PC PASCALC:/DEMOS/PI, then PASCALC:/DEMOS/PI)
   TESTS/   the tests of DOUBLE (tools/doubletest.py)
 
@@ -28,13 +28,17 @@ VOLUME = os.path.join(ROOT, 'build', 'PASCAL-C.BLK')
 MODULES = ['globals', 'builtin', 'sets', 'heap', 'procs', 'compinit', 'decpart', 'bodypart', 'double',
            'unitpart', 'block', 'rare', 'pcio_psys', 'pc_psys']
 
-BUILD = """; BUILD -- the Pascal compiler in C: CC @PASCALC:/SRC/BUILD from the shell (or
-; X(ecute TINY-C:CC and answer @PASCALC:/SRC/BUILD), TINY-C: on line.  Compiles
-; every module (the names beside this file; -O: each NAME.OBJ into PASCALC:/OBJ),
-; then links them into PASCALC:PC.CODE, the same as the one it replaces.
--O PASCALC:/OBJ
-""" + ''.join('-C %s\n' % m.upper() for m in MODULES) + \
-    '-L PASCALC:PC=%s\n' % ','.join(m.upper() for m in MODULES)
+
+
+def makefile():
+    """PASCALC:/SRC/MAKEFILE.TEXT (UCSD-TinyC's program_makefile: header prerequisites too)"""
+    return tcmkvolume.program_makefile("""MAKEFILE -- the Pascal compiler in C: from the shell, MAKE -f PASCALC:/SRC/MAKEFILE
+(TINY-C: and TOOLS: on line; MAKE -f TINY-C:MAKEFILE runs it too).  Compiles each
+module whose source or headers changed (its NAME.OBJ into PASCALC:/OBJ), then links
+them into PASCALC:PC.CODE, the same as the one it replaces.  MAKE -B ... compiles
+them all again.""", 'PASCALC:/SRC/', 'PASCALC:/OBJ/', [os.path.join(ROOT, 'src', m + '.c') for m in MODULES],
+                                       'PASCALC:PC')
+
 
 WHAT = {
     'globals': 'the global variables',
@@ -79,14 +83,14 @@ def main():
     v = Dir('PASCALC')
     v.binary('PC.CODE', open(pc, 'rb').read(), 'the compiler: PC NAME [CODE] from the shell')
     v.textfile('README.TEXT', os.path.join(ROOT, 'src', 'readme.txt'), 'what is on PASCALC:, how to use and build it')
-    src = v.sub('SRC', 'the compiler\'s sources and BUILD.TEXT')
-    src.text('BUILD.TEXT', BUILD, 'CC @PASCALC:/SRC/BUILD makes PASCALC:PC.CODE again')
+    src = v.sub('SRC', 'the compiler\'s sources and MAKEFILE.TEXT')
+    src.text('MAKEFILE.TEXT', makefile(), 'MAKE -f PASCALC:/SRC/MAKEFILE makes PASCALC:PC.CODE again')
     src.textfile('COMPGLBL.H', os.path.join(ROOT, 'src', 'compglbl.h'), 'COMPGLBLS: constants, types, global variables')
     src.textfile('PCIO.H', os.path.join(ROOT, 'src', 'pcio.h'), 'what the compiler reads and writes')
     src.textfile('GEN.H', os.path.join(ROOT, 'src', 'gen.h'), 'what BODYPART.C and DOUBLE.C share')
     for m in MODULES:
         src.textfile(m.upper() + '.C', os.path.join(ROOT, 'src', m + '.c'), WHAT[m])
-    v.sub('OBJ', 'empty: the objects BUILD makes (-O PASCALC:/OBJ)', 6 + objblocks() + ROOM)
+    v.sub('OBJ', 'empty: the objects the makefile makes (-O PASCALC:/OBJ)', 6 + objblocks() + ROOM)
     for name, progs in (('DEMOS', DEMOS), ('TESTS', TESTS)):
         d = v.sub(name, 'programs to try: PC PASCALC:/DEMOS/NAME, then PASCALC:/DEMOS/NAME' if name == 'DEMOS'
                   else 'the tests of DOUBLE: PC PASCALC:/TESTS/NAME, then PASCALC:/TESTS/NAME')
@@ -95,7 +99,7 @@ def main():
     for d in [r for n, r, k, w in v.items if isinstance(r, Dir)]:
         d.made()
     v.items.append(['FILES.TEXT', b'', 3, 'this list'])
-    # room for a second PC.CODE (BUILD links the new one while the old one is there) and more
+    # room for a second PC.CODE (the link writes the new one while the old one is there) and more
     v.blocks = 6 + sum(max(1, (len(r.made().image() if isinstance(r, Dir) else r) + 511) // 512)
                        for n, r, k, w in v.items) + 2 * ((len(open(pc, 'rb').read()) + 511) // 512) + ROOM
     for _ in range(2):                          # (once to learn its own size)

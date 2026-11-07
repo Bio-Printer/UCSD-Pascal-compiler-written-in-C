@@ -9,7 +9,7 @@ compiler that produces the same code files as the original.  All 25 programs
 of the corpus (below), the compiler's own source among them, compile to code
 files identical to SYSTEM.COMPILER's: on the host, and on the P-System from
 the Tiny-C shell (`PC NAME`), where CC also rebuilds PC.CODE from its sources
-(`CC @PASCALC:/SRC/BUILD`).  It also has a type DOUBLE (below), the emulator's
+(`MAKE -f PASCALC:/SRC/MAKEFILE`).  It also has a type DOUBLE (below), the emulator's
 8-byte floating point.  Next: SYSTEM.COMPILER; then phase 2, which improves
 the code it generates (smaller, tighter P-code; the emulator's extra CSPs).
 
@@ -46,9 +46,9 @@ the code it generates (smaller, tighter P-code; the emulator's extra CSPs).
   emulator and compares the same way.
 * `tools/mkvolume.py` makes the volume PASCALC: (`build/PASCAL-C.BLK`), laid out
   as UCSD-TinyC's TINY-C: is, in sub-volumes: PC.CODE, README.TEXT and FILES.TEXT
-  at the top, `SRC/` the sources with BUILD.TEXT, `OBJ/` (empty) for the objects
-  BUILD makes, `DEMOS/` (PI) and `TESTS/` (DOUBLES, READTEST).
-  `tools/psysbuild.py` runs `CC @PASCALC:/SRC/BUILD` on the P-System, which must
+  at the top, `SRC/` the sources with MAKEFILE.TEXT, `OBJ/` (empty) for the
+  objects it makes, `DEMOS/` (PI) and `TESTS/` (DOUBLES, READTEST).
+  `tools/psysbuild.py` runs `MAKE -f PASCALC:/SRC/MAKEFILE` on the P-System, which must
   give the host's PC.CODE (the objects in OBJ, none in SRC); `tools/voltest.py`
   uses the volume from the shell: `PC PASCALC:/DEMOS/PI` and the program run where
   it is, then `CD PASCALC:/TESTS`, `PC READTEST` and READTEST.

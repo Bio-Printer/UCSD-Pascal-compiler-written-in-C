@@ -2,7 +2,8 @@
 
      PC NAME [CODE]
 
-   compiles NAME.TEXT (NAME if it ends in .TEXT) to CODE (NAME.CODE),
+   compiles NAME.TEXT (NAME if it ends in .TEXT) to CODE (NAME.CODE; CODE. -- a dot at its
+   end -- that name exactly, as the Filer's: SYSTEM.COMPILER.),
    as the system's C(ompile would.
 
    The command line is read as the library's __callmain reads it (pexec.c),
@@ -126,7 +127,9 @@ static BOOLEAN SETUP(void)
     }
     if (argc == 3) {
         n = ENDSWITH(argv[2], ".CODE");
-        if (n >= 0)
+        if (LENGTH(argv[2]) > 1 && argv[2][LENGTH(argv[2]) - 1] == '.')
+            TITLE(argv[2], LENGTH(argv[2]) - 1, "", t);     /* CODE. : that name exactly (SYSTEM.COMPILER.) */
+        else if (n >= 0)
             TITLE(argv[2], n, "", t);
         else
             TITLE(argv[2], LENGTH(argv[2]), ".CODE", t);

@@ -15,9 +15,9 @@ WHAT IS WHERE (FILES.TEXT lists every file)
 
   PC.CODE       the compiler
   README.TEXT   this
-  SRC/          its sources (C, Tiny-C), and BUILD.TEXT:
-                CC @PASCALC:/SRC/BUILD makes PC.CODE again, the same
-  OBJ/          empty: the objects BUILD makes (-O PASCALC:/OBJ)
+  SRC/          its sources (C, Tiny-C), and MAKEFILE.TEXT:
+                MAKE -f PASCALC:/SRC/MAKEFILE makes PC.CODE again, the same
+  OBJ/          empty: the objects the makefile makes (-O PASCALC:/OBJ)
   DEMOS/        programs to try: PI (pi by Archimedes' method, DOUBLEs)
   TESTS/        the tests of DOUBLE: DOUBLES, READTEST
 
@@ -31,6 +31,8 @@ From the shell (S at the Command: prompt):
 
   PC NAME              compile NAME.TEXT to NAME.CODE
   PC NAME CODE         ... to CODE.CODE (CODE: any name; .CODE is added)
+  PC NAME CODE.        ... to CODE: with a dot at its end, that name
+                       exactly (PC COMPILER SYSTEM.COMPILER.)
 
 as the system's C(ompile does with "Compile what text?" NAME and "To what
 codefile?" CODE.  NAME may be a path into sub-volumes, as in every Tiny-C
@@ -47,7 +49,7 @@ Command: prompt runs the Pascal one.
 
 THE SOURCES (SRC)
 
-  BUILD.TEXT    CC @PASCALC:/SRC/BUILD makes PC.CODE again, the same
+  MAKEFILE.TEXT MAKE -f PASCALC:/SRC/MAKEFILE makes PC.CODE again, the same
   COMPGLBL.H    COMPGLBLS: the constants, types and global variables
   PCIO.H        what the compiler reads and writes (the system's files)
   GEN.H         what BODYPART.C and DOUBLE.C share
@@ -86,11 +88,13 @@ from SYSTEM.LIBRARY.  Try:  PC PASCALC:/DEMOS/PI  then  PASCALC:/DEMOS/PI.
 
 BUILDING IT
 
-  CC @PASCALC:/SRC/BUILD   (from the shell; TINY-C: on line)
+  MAKE -f PASCALC:/SRC/MAKEFILE   (from the shell; TINY-C: and TOOLS: on line)
 
-compiles the modules in SRC (their .OBJ files go into OBJ) and links
-PASCALC:PC.CODE, the same as the one it replaces, byte for byte.
-CC @TINY-C:ALL does it too, after Tiny-C, its tools and SYS-C:SYSTEM.C.
+compiles each module in SRC whose source or headers are newer than its
+object (the .OBJ files go into OBJ; empty on a new volume: all of them) and
+links PASCALC:PC.CODE, the same as the one it replaces, byte for byte;
+MAKE -B ... compiles them all again.  MAKE -f TINY-C:MAKEFILE does it too,
+after Tiny-C, its tools and SYS-C:SYSTEM.C.
 
 MEMORY
 
