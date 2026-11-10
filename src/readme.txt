@@ -2,7 +2,7 @@ PASCALC:  THE PASCAL COMPILER IN C
 
 (The disk image is PASCAL-C.BLK; a volume's name has at most 7 characters.)
 
-PC is the UCSD Pascal II.0 compiler written in C (Tiny-C): a translation,
+PC is the UCSD Pascal II.0 compiler written in C (UCSD-C): a translation,
 routine by routine, of U132.A_PASCAL_COMPILER_SOURCE_v1.08, the source of
 BIGGY's SYSTEM.COMPILER.  Its code files are the same as the Pascal
 compiler's: compiling the compiler's own source (COMPILER.TEXT on U132.A)
@@ -15,13 +15,13 @@ WHAT IS WHERE (FILES.TEXT lists every file)
 
   PC.CODE       the compiler
   README.TEXT   this
-  SRC/          its sources (C, Tiny-C), and MAKEFILE.TEXT:
+  SRC/          its sources (C, UCSD-C), and MAKEFILE.TEXT:
                 MAKE -f PASCALC:/SRC/MAKEFILE makes PC.CODE again, the same
   OBJ/          empty: the objects the makefile makes (-O PASCALC:/OBJ)
   DEMOS/        programs to try: PI (pi by Archimedes' method, DOUBLEs)
   TESTS/        the tests of DOUBLE: DOUBLES, READTEST
 
-SRC, OBJ, DEMOS and TESTS are sub-volumes, as on TINY-C: (the shell's
+SRC, OBJ, DEMOS and TESTS are sub-volumes, as on UCSD-C: (the shell's
 MKDIR, CD, DIR: DIR PASCALC:/DEMOS, CD PASCALC:/TESTS); the Filer sees
 each as one data file.
 
@@ -35,7 +35,7 @@ From the shell (S at the Command: prompt):
                        exactly (PC COMPILER SYSTEM.COMPILER.)
 
 as the system's C(ompile does with "Compile what text?" NAME and "To what
-codefile?" CODE.  NAME may be a path into sub-volumes, as in every Tiny-C
+codefile?" CODE.  NAME may be a path into sub-volumes, as in every UCSD-C
 program: PC PASCALC:/DEMOS/PI compiles DEMOS/PI.TEXT to DEMOS/PI.CODE, and
 PASCALC:/DEMOS/PI runs it where it is; after CD PASCALC:/DEMOS, PC PI and
 PI do the same (a name without a volume is on the shell's path).  Include
@@ -88,13 +88,13 @@ from SYSTEM.LIBRARY.  Try:  PC PASCALC:/DEMOS/PI  then  PASCALC:/DEMOS/PI.
 
 BUILDING IT
 
-  MAKE -f PASCALC:/SRC/MAKEFILE   (from the shell; TINY-C: and TOOLS: on line)
+  MAKE -f PASCALC:/SRC/MAKEFILE   (from the shell; UCSD-C: and TOOLS: on line)
 
 compiles each module in SRC whose source or headers are newer than its
 object (the .OBJ files go into OBJ; empty on a new volume: all of them) and
 links PASCALC:PC.CODE, the same as the one it replaces, byte for byte;
-MAKE -B ... compiles them all again.  MAKE -f TINY-C:MAKEFILE does it too,
-after Tiny-C, its tools and SYS-C:SYSTEM.C.
+MAKE -B ... compiles them all again.  MAKE -f UCSD-C:MAKEFILE does it too,
+after UCSD-C, its tools and SYS-C:SYSTEM.C.
 
 MEMORY
 

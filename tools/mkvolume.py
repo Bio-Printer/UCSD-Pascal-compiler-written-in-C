@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """mkvolume.py -- the volume PASCALC: (build/PASCAL-C.BLK; a volume's name is
-at most 7 characters), laid out as TINY-C: is, in sub-volumes:
+at most 7 characters), laid out as UCSD-C: is, in sub-volumes:
 
   PC.CODE, README.TEXT, FILES.TEXT   the compiler (build/psys/PC.CODE, make psys)
   SRC/     its P-System sources as text files, and MAKEFILE.TEXT (MAKE -f PASCALC:/SRC/MAKEFILE)
@@ -8,16 +8,16 @@ at most 7 characters), laid out as TINY-C: is, in sub-volumes:
   DEMOS/   programs to try (PC PASCALC:/DEMOS/PI, then PASCALC:/DEMOS/PI)
   TESTS/   the tests of DOUBLE (tools/doubletest.py)
 
-Made with UCSD-TinyC's mkvolume (its Dir: the sub-volumes made on the host, as
-the shell's MKDIR makes them); uses UCSD-TinyC beside this repository ($TINYC)."""
+Made with UCSD-C's mkvolume (its Dir: the sub-volumes made on the host, as
+the shell's MKDIR makes them); uses UCSD-C beside this repository ($UCSDC)."""
 import importlib.util, os, subprocess, sys, tempfile
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 sys.path.insert(0, HERE)
-from refcompile import TINYC
-sys.path.insert(0, os.path.join(TINYC, 'tools'))
+from refcompile import UCSDC
+sys.path.insert(0, os.path.join(UCSDC, 'tools'))
 import ucsdvol
-_spec = importlib.util.spec_from_file_location('tcmkvolume', os.path.join(TINYC, 'tools', 'mkvolume.py'))
+_spec = importlib.util.spec_from_file_location('tcmkvolume', os.path.join(UCSDC, 'tools', 'mkvolume.py'))
 tcmkvolume = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(tcmkvolume)
 Dir, ROOM = tcmkvolume.Dir, tcmkvolume.ROOM
@@ -31,9 +31,9 @@ MODULES = ['globals', 'builtin', 'sets', 'heap', 'procs', 'compinit', 'decpart',
 
 
 def makefile():
-    """PASCALC:/SRC/MAKEFILE.TEXT (UCSD-TinyC's program_makefile: header prerequisites too)"""
+    """PASCALC:/SRC/MAKEFILE.TEXT (UCSD-C's program_makefile: header prerequisites too)"""
     return tcmkvolume.program_makefile("""MAKEFILE -- the Pascal compiler in C: from the shell, MAKE -f PASCALC:/SRC/MAKEFILE
-(TINY-C: and TOOLS: on line; MAKE -f TINY-C:MAKEFILE runs it too).  Compiles each
+(UCSD-C: and TOOLS: on line; MAKE -f UCSD-C:MAKEFILE runs it too).  Compiles each
 module whose source or headers changed (its NAME.OBJ into PASCALC:/OBJ), then links
 them into PASCALC:PC.CODE, the same as the one it replaces.  MAKE -B ... compiles
 them all again.""", 'PASCALC:/SRC/', 'PASCALC:/OBJ/', [os.path.join(ROOT, 'src', m + '.c') for m in MODULES],
@@ -59,7 +59,7 @@ WHAT = {
 
 
 # programs to try, and the tests of DOUBLE (tests/, tools/doubletest.py): PC NAME, then NAME
-DEMOS = [('PI', 'pi by Archimedes\' method, in DOUBLEs (Tiny-C\'s PI.C)')]
+DEMOS = [('PI', 'pi by Archimedes\' method, in DOUBLEs (UCSD-C\'s PI.C)')]
 TESTS = [('DOUBLES', 'DOUBLE: arithmetic, functions, WRITE, parameters'),
          ('READTEST', 'DOUBLE: READ from the console and a file')]
 
@@ -70,7 +70,7 @@ def objblocks():
     n = 0
     for m in MODULES:
         o = os.path.join(d, m + '.obj')
-        subprocess.run([os.path.join(TINYC, 'build', 'tc'), '-c', '-I', os.path.join(TINYC, 'tinyc', 'include'),
+        subprocess.run([os.path.join(UCSDC, 'build', 'tc'), '-c', '-I', os.path.join(UCSDC, 'ucsdc', 'include'),
                         os.path.join(ROOT, 'src', m + '.c'), '-o', o], capture_output=True, check=True)
         n += (os.path.getsize(o) + 511) // 512
     return n

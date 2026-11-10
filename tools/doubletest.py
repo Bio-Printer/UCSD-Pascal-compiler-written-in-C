@@ -5,15 +5,15 @@ compile, so there is no reference code file.  For each:
 
   * the host's PC (build/pc, make) compiles it; twice, with new memory
     filled differently, for the bytes it never sets (as compare.py);
-  * on the P-System, from the Tiny-C shell, PC.CODE (build/psys/PC.CODE,
+  * on the P-System, from the UCSD-C shell, PC.CODE (build/psys/PC.CODE,
     make psys) compiles it again: the code file must be the host's;
   * that code file runs (from the shell) and prints tests/NAME.expect
     (what it reads typed as tests/NAME.input says, if there is one).
 
-  doubletest.py [NAME ...]      (default: every tests/*.PAS; PSYS_MODE as in UCSD-TinyC)
+  doubletest.py [NAME ...]      (default: every tests/*.PAS; PSYS_MODE as in UCSD-C)
 
 The program's volume is unit #5, PC.CODE and the code file unit #13.  The
-boot disk is UCSD-TinyC's BIGGY (build/BIGGY.BLK).  In Z80 mode the CSPs
+boot disk is UCSD-C's BIGGY (build/BIGGY.BLK).  In Z80 mode the CSPs
 100..137 are the emulator's coprocessor's (engine 1.93 or later).
 """
 import os, re, shutil, subprocess, sys, tempfile
@@ -21,8 +21,8 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 sys.path.insert(0, HERE)
 from compare import PC, differences, ucsdvol
-from refcompile import TINYC
-sys.path.insert(0, os.path.join(TINYC, 'tools'))
+from refcompile import UCSDC
+sys.path.insert(0, os.path.join(UCSDC, 'tools'))
 from psys import ensure_setup, BUILD, shell_script, shell_transcript
 
 TESTS = os.path.join(ROOT, 'tests')

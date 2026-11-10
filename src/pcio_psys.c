@@ -11,7 +11,7 @@
 
    A file read or written by blocks may be in a sub-volume (a path,
    PASCALC:/DEMOS/PI.TEXT, or a name on the shell's path after its CD), as
-   in every Tiny-C program: the library finds its place (dirs.c's __svplace,
+   in every UCSD-C program: the library finds its place (dirs.c's __svplace,
    __svopenat) and enters a new one in its directory when it is closed
    (__svcloseat); its blocks are read and written by the disk's, within the
    file's.  Its FIB is then the library's record of it (dirs.c): the unit,

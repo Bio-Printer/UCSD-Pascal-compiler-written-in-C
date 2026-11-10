@@ -13,14 +13,14 @@ build/pc: $(SRC) src/*.h
 clean:
 	rm -rf build
 
-# The compiler on the P-System (build/psys/PC.CODE): UCSD-TinyC's host Tiny-C beside this repository.
-TINYC ?= ../ucsd-tinyc
+# The compiler on the P-System (build/psys/PC.CODE): UCSD-C's host compiler beside this repository.
+UCSDC ?= ../ucsd-c
 PSRC = src/globals.c src/builtin.c src/sets.c src/heap.c src/procs.c \
        src/compinit.c src/decpart.c src/bodypart.c src/double.c src/unitpart.c src/block.c \
        src/rare.c src/pcio_psys.c src/pc_psys.c
 
 build/psys/PC.CODE: $(PSRC) src/*.h
 	mkdir -p build/psys
-	$(TINYC)/build/tc -I $(TINYC)/tinyc/include -o $@ $(PSRC)
+	$(UCSDC)/build/tc -I $(UCSDC)/ucsdc/include -o $@ $(PSRC)
 
 psys: build/psys/PC.CODE

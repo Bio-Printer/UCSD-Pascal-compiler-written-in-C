@@ -1,13 +1,13 @@
 /* preal.c -- (the host build only) the P-machine's REAL, bit for bit: the Z80
    interpreter's floating-point package (FPL.TEXT / FPI.TEXT), ported from the
    emulator's UcsdReal.h, and PWROFTEN's table (TENTBL).  On the P-System the
-   compiler's REAL is Tiny-C's float, which is this real, so the two builds make
+   compiler's REAL is UCSD-C's float, which is this real, so the two builds make
    the same constants.
 
    A real is 4 bytes, as in memory: [0] the exponent (bias 128, 0: zero),
    [1] the sign and the top 7 mantissa bits (the leading 1 not stored), [2] [3]
    the rest of the mantissa: 0.1mmm...m * 2^(exp-128). */
-#ifndef __TINYC__
+#ifndef __UCSDC__
 #include "compglbl.h"
 #include <stdint.h>
 

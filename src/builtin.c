@@ -8,7 +8,7 @@
    RESTBL at 1766H). */
 #include "compglbl.h"
 
-#ifndef __TINYC__                       /* (the interpreter's on the P-System, CSP 7) */
+#ifndef __UCSDC__                       /* (the interpreter's on the P-System, CSP 7) */
 /* RESTBL: for each letter A..Z+1 the index of its first record; a record is
    the word's 8 characters, its SYMBOL and its OPERATOR */
 static const unsigned char RESIDX[27] = {
@@ -144,7 +144,7 @@ INTEGER SCAN(INTEGER LIMIT, BOOLEAN NE, CHAR CH, CHAR *P)
     return LIMIT;
 }
 
-#ifndef __TINYC__
+#ifndef __UCSDC__
 void MOVELEFT(const void *src, void *dst, int n)
 {
     const CHAR *s = src;

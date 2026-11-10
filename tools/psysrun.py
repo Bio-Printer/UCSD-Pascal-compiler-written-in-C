@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """psysrun.py -- the C compiler on the P-System: build/psys/PC.CODE (make psys)
-compiles programs of the corpus from the Tiny-C shell, in the emulator, and
+compiles programs of the corpus from the UCSD-C shell, in the emulator, and
 each code file is compared with the reference as compare.py does.
 
   psysrun.py [-v] [NAME ...]     (default: the whole corpus; -v: the transcripts)
 
 The program's volume is unit #5 (the shell's cd #5), PC.CODE and the code
 file are on a work volume, unit #13: "#13:pc NAME #13:NAME.CODE".  The boot
-disk is UCSD-TinyC's BIGGY (build/BIGGY.BLK).  PSYS_MODE as in UCSD-TinyC.
+disk is UCSD-C's BIGGY (build/BIGGY.BLK).  PSYS_MODE as in UCSD-C.
 The bytes the compiler never sets are those the host's two compiles find.
 """
 import os, re, shutil, subprocess, sys, tempfile
@@ -16,8 +16,8 @@ ROOT = os.path.dirname(HERE)
 sys.path.insert(0, HERE)
 import compare
 from compare import CORPUS, EXTRA, SMALL, BLK, ucsdvol
-from refcompile import TINYC
-sys.path.insert(0, os.path.join(TINYC, 'tools'))
+from refcompile import UCSDC
+sys.path.insert(0, os.path.join(UCSDC, 'tools'))
 from psys import ensure_setup, BUILD, shell_script, shell_transcript
 
 PCCODE = os.environ.get('PCCODE', os.path.join(ROOT, 'build', 'psys', 'PC.CODE'))

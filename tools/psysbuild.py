@@ -1,22 +1,22 @@
 #!/usr/bin/env python3
-"""psysbuild.py -- PASCALC:/SRC/MAKEFILE on the P-System: from the Tiny-C shell,
+"""psysbuild.py -- PASCALC:/SRC/MAKEFILE on the P-System: from the UCSD-C shell,
 MAKE -f PASCALC:/SRC/MAKEFILE compiles the compiler's modules in PASCALC:/SRC
 (build/PASCAL-C.BLK, tools/mkvolume.py), their objects into PASCALC:/OBJ, and
 links PASCALC:PC.CODE, which must be build/psys/PC.CODE byte for byte (the
-host's Tiny-C made that one); no object is left in SRC.
+host's UCSD-C made that one); no object is left in SRC.
 
-  psysbuild.py          (PSYS_MODE as in UCSD-TinyC)
+  psysbuild.py          (PSYS_MODE as in UCSD-C)
 
-TINY-C: is unit #5 (UCSD-TinyC's build/TINY-C.BLK), PASCALC: unit #13, TOOLS:
+UCSD-C: is unit #5 (UCSD-C's build/UCSD-C.BLK), PASCALC: unit #13, TOOLS:
 (MAKE) unit #12; then MAKE again says it is up to date.
 """
 import os, re, shutil, subprocess, sys, tempfile
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 sys.path.insert(0, HERE)
-from refcompile import TINYC
+from refcompile import UCSDC
 from mkvolume import MODULES
-sys.path.insert(0, os.path.join(TINYC, 'tools'))
+sys.path.insert(0, os.path.join(UCSDC, 'tools'))
 import ucsdvol
 from psys import ensure_setup, BUILD, shell_script, shell_transcript
 
@@ -29,7 +29,7 @@ def main():
     for f in os.listdir(os.path.join(BUILD, 'data')):
         shutil.copy(os.path.join(BUILD, 'data', f), data)
     shutil.copy(os.path.join(BUILD, 'BIGGY.BLK'), os.path.join(data, 'Big_Disk.BLK'))
-    shutil.copy(os.path.join(BUILD, 'TINY-C.BLK'), d)
+    shutil.copy(os.path.join(BUILD, 'UCSD-C.BLK'), d)
     shutil.copy(os.path.join(BUILD, 'TOOLS.BLK'), d)
     vol = os.path.join(d, 'PASCAL-C.BLK')
     shutil.copy(os.path.join(ROOT, 'build', 'PASCAL-C.BLK'), vol)
@@ -39,7 +39,7 @@ def main():
          'WAIT "shell> "', 'TYPE "make -f pascalc:/src/makefile\\r"', 'WAIT "shell> "', 'TYPE "bye\\r"', 'WAIT "Command:"']
     sp = os.path.join(d, 'build.script')
     open(sp, 'w').write(shell_script('\n'.join(L) + '\n'))
-    r = subprocess.run([os.path.join(BUILD, 'run_verify'), data, os.path.join(d, 'TINY-C.BLK'), spare, sp,
+    r = subprocess.run([os.path.join(BUILD, 'run_verify'), data, os.path.join(d, 'UCSD-C.BLK'), spare, sp,
                         os.environ.get('PSYS_MODE', 'native'), os.path.join(d, 'out'), '', '7200'],
                        capture_output=True, text=True, env=dict(os.environ, VERIFY_UNIT13=vol, VERIFY_UNIT12=os.path.join(d, 'TOOLS.BLK')), cwd=d)
     tp = os.path.join(d, 'out', 'transcript.txt')

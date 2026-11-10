@@ -10,7 +10,7 @@
    different fills show which bytes of the output depend on it (compare.py). */
 #include "compglbl.h"
 
-#ifdef __TINYC__
+#ifdef __UCSDC__
 void *PNEW(int bytes)
 {
     void *p;

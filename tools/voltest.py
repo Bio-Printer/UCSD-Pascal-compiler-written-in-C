@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """voltest.py -- PASCALC: (build/PASCAL-C.BLK, tools/mkvolume.py) used as it is
-meant to be, from the Tiny-C shell, with its files in their sub-volumes:
+meant to be, from the UCSD-C shell, with its files in their sub-volumes:
 
   pc pascalc:/demos/pi        a path: PI.TEXT read in DEMOS, PI.CODE made there
   pascalc:/demos/pi           ... and run where it is: the output of tests/PI.expect
@@ -13,9 +13,9 @@ meant to be, from the Tiny-C shell, with its files in their sub-volumes:
 and on the host: PI.CODE and READTEST.CODE in their sub-volumes, each the same as
 the host's PC makes (the bytes it never sets aside), nothing else new but DBL.TEXT.
 
-  voltest.py        (PSYS_MODE as in UCSD-TinyC)
+  voltest.py        (PSYS_MODE as in UCSD-C)
 
-PASCALC: is unit #13, the boot disk UCSD-TinyC's BIGGY (build/BIGGY.BLK).
+PASCALC: is unit #13, the boot disk UCSD-C's BIGGY (build/BIGGY.BLK).
 """
 import os, re, shutil, subprocess, sys, tempfile
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -23,8 +23,8 @@ ROOT = os.path.dirname(HERE)
 sys.path.insert(0, HERE)
 from compare import differences, ucsdvol
 from doubletest import TESTS, host_compile, keys, normalize
-from refcompile import TINYC
-sys.path.insert(0, os.path.join(TINYC, 'tools'))
+from refcompile import UCSDC
+sys.path.insert(0, os.path.join(UCSDC, 'tools'))
 from psys import ensure_setup, BUILD, shell_script, shell_transcript
 
 

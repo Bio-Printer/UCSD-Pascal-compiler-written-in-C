@@ -9,15 +9,15 @@ For each program its source volume is unit #5 (the prefix is set to it), the
 Command: prompt's C(ompile is given NAME and the code file's name, and the
 code file and the console transcript go to reference/NAME.CODE and
 reference/NAME.LOG.  The C compiler's output is compared with these
-(tools/compare.py).  Uses UCSD-TinyC's build/run_verify and
-UCSD-Pascal-Volumes beside this repository ($TINYC, $VOLUMES).
+(tools/compare.py).  Uses UCSD-C's build/run_verify and
+UCSD-Pascal-Volumes beside this repository ($UCSDC, $VOLUMES).
 """
 import os, re, shutil, subprocess, sys, tempfile
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
-TINYC = os.environ.get('TINYC', os.path.join(os.path.dirname(ROOT), 'ucsd-tinyc'))
+UCSDC = os.environ.get('UCSDC', os.path.join(os.path.dirname(ROOT), 'ucsd-c'))
 VOLUMES = os.environ.get('VOLUMES', os.path.join(os.path.dirname(ROOT), 'UCSD-Pascal-Volumes'))
-sys.path.insert(0, os.path.join(TINYC, 'tools'))
+sys.path.insert(0, os.path.join(UCSDC, 'tools'))
 import ucsdvol
 
 BLK = os.path.join(VOLUMES, 'BLK_format')
@@ -67,7 +67,7 @@ def compile_one(name, out_dir):
     vol, src, code = CORPUS[name]
     d = tempfile.mkdtemp(prefix='refc_')
     os.makedirs(os.path.join(d, 'data'))
-    shutil.copy(os.path.join(TINYC, 'build', 'data', 'pascal.bin'), os.path.join(d, 'data'))
+    shutil.copy(os.path.join(UCSDC, 'build', 'data', 'pascal.bin'), os.path.join(d, 'data'))
     shutil.copy(os.path.join(BLK, 'Big_Disk.BLK'), os.path.join(d, 'data', 'Big_Disk.BLK'))
     unit5 = os.path.join(d, 'SRC.BLK')
     if vol:
@@ -87,7 +87,7 @@ def compile_one(name, out_dir):
               'WAIT "Filer:"\nTYPE "Q"\nWAIT "Command:"\nTYPE "C"\nWAIT "Compile what text?"\n'
               'TYPE "%s\\r"\nWAIT "To what codefile?"\nTYPE "%s\\r"\nWAIT "Command:"\n' % (src, code))
     open(os.path.join(d, 'c.script'), 'w').write(script)
-    r = subprocess.run([os.path.join(TINYC, 'build', 'run_verify'), os.path.join(d, 'data'), unit5,
+    r = subprocess.run([os.path.join(UCSDC, 'build', 'run_verify'), os.path.join(d, 'data'), unit5,
                         os.path.join(d, 'S.BLK'), os.path.join(d, 'c.script'), 'native', os.path.join(d, 'out'),
                         '', '1800'], capture_output=True, text=True, cwd=d)   # (its printer file goes there)
     tr = ''

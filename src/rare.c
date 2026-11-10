@@ -5,7 +5,7 @@
    segment dictionary (PASCALCOMPILER's, BLOCK.TEXT). */
 #include "compglbl.h"
 #include "pcio.h"
-#ifndef __TINYC__
+#ifndef __UCSDC__
 #include <stdlib.h>
 #endif
 
@@ -227,7 +227,7 @@ void LONGNUMBER(INTEGER IPART, INTEGER ENDI, INTEGER K, INTEGER ISUM)
    so that both builds make the same bits */
 void DBLTEXT(CHAR *TEXT, WORD *D)
 {
-#ifdef __TINYC__
+#ifdef __UCSDC__
     __cspi(135, TEXT, D);
 #else
     double x = strtod((char *)TEXT, NULL);

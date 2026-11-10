@@ -2,12 +2,12 @@
    global variables (UCSD Pascal II.0, U132.A revision 1.08).
 
    Pascal names are kept, in capitals, so that this reads beside the Pascal.
-   INTEGER is 16 bits on both builds (Tiny-C's int; int16_t on the host).
+   INTEGER is 16 bits on both builds (UCSD-C's int; int16_t on the host).
    A Pascal set is a few 16-bit words (SETS: up to 64 members). */
 #ifndef COMPGLBL_H
 #define COMPGLBL_H
 
-#ifdef __TINYC__
+#ifdef __UCSDC__
 #include <stddef.h>
 #include <string.h>
 typedef int INTEGER;
@@ -432,7 +432,7 @@ extern CHAR DISKBUF[512];
    as the Pascal does it: a function's address is its segment + 256 * its
    procedure number; on the host a longjmp to main */
 void PASCALCOMPILER(void);
-#ifdef __TINYC__
+#ifdef __UCSDC__
 #define EXITCOMPILER() __cspv(4, (int)PASCALCOMPILER & 255, DIV((int)PASCALCOMPILER, 256))
 #else
 extern jmp_buf EXITPC;
@@ -444,7 +444,7 @@ extern jmp_buf EXITPC;
    them when an operand is negative, which none is here); a word's high
    byte: the P-machine is little-endian, as is the host (the P-machine has no
    shifts: << and >> are library functions too) */
-#ifdef __TINYC__
+#ifdef __UCSDC__
 #define DIV(a, b) __dvi(a, b)
 #define MOD(a, b) __mdi(a, b)
 #else
@@ -457,7 +457,7 @@ extern jmp_buf EXITPC;
    from the first byte up, MOVERIGHT from the last down): on the P-System
    the P-machine's own (CSP 2, 3, 10), not the library's memcpy, memmove,
    memset; on the host builtin.c's */
-#ifdef __TINYC__
+#ifdef __UCSDC__
 #define MOVELEFT(src, dst, n) __cspv(2, src, 0, dst, 0, n)
 #define MOVERIGHT(src, dst, n) __cspv(3, src, 0, dst, 0, n)
 #define FILLCHAR(dst, n, ch) __cspv(10, dst, 0, n, ch)
@@ -515,7 +515,7 @@ void WRITELINKERINFO(BOOLEAN DECSTUFF);         /* unitpart.c */
 void UNITPART(SETOFSYS *FSYS);
 
 /* the interpreter's built-ins (builtin.c) */
-#ifdef __TINYC__
+#ifdef __UCSDC__
 #define IDSEARCH() __cspv(7, &SYMCURSOR, SYMBUFP)   /* the identifier at SYMBUFP^[SYMCURSOR] */
 #else
 void IDSEARCH(void);
@@ -523,9 +523,9 @@ void IDSEARCH(void);
 INTEGER TREESEARCH(CTP ROOT, CTP *FOUND, CHAR *TARGET);
 INTEGER SCAN(INTEGER LIMIT, BOOLEAN NE, CHAR CH, CHAR *P);  /* SCAN(LIMIT, =CH or <>CH, P^) */
 
-/* REAL arithmetic: Tiny-C's float on the P-System (the P-machine's real); its
+/* REAL arithmetic: UCSD-C's float on the P-System (the P-machine's real); its
    bit-exact emulation on the host (preal.c) */
-#ifdef __TINYC__
+#ifdef __UCSDC__
 #define RFLOAT(i) ((REAL)(i))
 #define RADD(a, b) ((a) + (b))
 #define RSUB(a, b) ((a) - (b))

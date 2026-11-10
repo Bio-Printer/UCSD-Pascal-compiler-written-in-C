@@ -1,14 +1,14 @@
 # UCSD-Pascal-compiler-written-in-C
 
 The UCSD Pascal II.0 compiler (`SYSTEM.COMPILER`, U132.A source revision 1.08)
-rewritten in C for [Tiny-C](https://github.com/Bio-Printer/UCSD-TinyC), to replace
+rewritten in C for [UCSD-C](https://github.com/Bio-Printer/UCSD-C), to replace
 the Pascal one on the P-System.
 
 **Status: phase 1 done** -- a routine-by-routine translation of the Pascal
 compiler that produces the same code files as the original.  All 25 programs
 of the corpus (below), the compiler's own source among them, compile to code
 files identical to SYSTEM.COMPILER's: on the host, and on the P-System from
-the Tiny-C shell (`PC NAME`), where CC also rebuilds PC.CODE from its sources
+the UCSD-C shell (`PC NAME`), where CC also rebuilds PC.CODE from its sources
 (`MAKE -f PASCALC:/SRC/MAKEFILE`).  It also has a type DOUBLE (below), the emulator's
 8-byte floating point.  Next: SYSTEM.COMPILER; then phase 2, which improves
 the code it generates (smaller, tighter P-code; the emulator's extra CSPs).
@@ -41,18 +41,18 @@ the code it generates (smaller, tighter P-code; the emulator's extra CSPs).
   for byte.  Bytes the compiler never sets -- what was in memory, which the
   Pascal's NEW does not clear -- are found by compiling twice with new memory
   filled differently, and left out.
-* `make psys` builds it with Tiny-C for the P-System (`build/psys/PC.CODE`);
+* `make psys` builds it with UCSD-C for the P-System (`build/psys/PC.CODE`);
   `tools/psysrun.py` compiles the corpus with it from the shell in the
   emulator and compares the same way.
 * `tools/mkvolume.py` makes the volume PASCALC: (`build/PASCAL-C.BLK`), laid out
-  as UCSD-TinyC's TINY-C: is, in sub-volumes: PC.CODE, README.TEXT and FILES.TEXT
+  as UCSD-C: is, in sub-volumes: PC.CODE, README.TEXT and FILES.TEXT
   at the top, `SRC/` the sources with MAKEFILE.TEXT, `OBJ/` (empty) for the
   objects it makes, `DEMOS/` (PI) and `TESTS/` (DOUBLES, READTEST).
   `tools/psysbuild.py` runs `MAKE -f PASCALC:/SRC/MAKEFILE` on the P-System, which must
   give the host's PC.CODE (the objects in OBJ, none in SRC); `tools/voltest.py`
   uses the volume from the shell: `PC PASCALC:/DEMOS/PI` and the program run where
   it is, then `CD PASCALC:/TESTS`, `PC READTEST` and READTEST.
-* On the P-System PC takes paths into sub-volumes as every Tiny-C program does
+* On the P-System PC takes paths into sub-volumes as every UCSD-C program does
   (`PC PASCALC:/DEMOS/PI`, or a name on the shell's path after a CD), through the
   library's own (dirs.c: `__svplace`, `__svopenat`, `__svcloseat`); its include files
   and units too.
@@ -65,7 +65,7 @@ See [docs/PLAN.md](docs/PLAN.md) for how the Pascal is translated.
 ## DOUBLE (not the Pascal's)
 
 `DOUBLE` is a standard type: IEEE binary64, 8 bytes (16 significant digits,
-exponents to ±308), done by the emulator's CSPs 100..137 (UCSD-TinyC's
+exponents to ±308), done by the emulator's CSPs 100..137 (UCSD-C's
 `docs/DOUBLES.md`; in Z80 mode the emulator's coprocessor, engine 1.93 or later).
 Programs without DOUBLE compile as before, byte for byte.
 
@@ -102,5 +102,5 @@ Programs without DOUBLE compile as before, byte for byte.
   from the shell with 3146 words to spare (3434 before sub-volume paths, which bring
   the C library's string functions into memory; 3777 before DOUBLE).
 
-`tests/PI.PAS` is Tiny-C's `tests/pi.c` in Pascal and prints its `pi.expect`, byte
+`tests/PI.PAS` is UCSD-C's `tests/pi.c` in Pascal and prints its `pi.expect`, byte
 for byte; `tests/DOUBLES.PAS` and `tests/READTEST.PAS` try the rest.

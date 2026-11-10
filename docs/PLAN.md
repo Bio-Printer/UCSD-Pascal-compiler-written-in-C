@@ -16,9 +16,9 @@ BLOCK.TEXT's compile summary.
 | `SET OF SYMBOL` (55 members), `SET OF IDCLASS` | a few 16-bit words (`SETOFSYS` 4 words), with `IN`, `+`, `-` as small functions; a set parameter is passed by its address, constant sets are built once (`INITSETS`) |
 | nested procedures using their parents' variables (`TYP` and its `SIMPLETYPE`, `FIELDLIST`, ...; `EXPRESSION` / `TERM` / `FACTOR`) | the parent's variables in a struct, its address passed to the nested function -- they recurse (`TYP` -> `FIELDLIST` -> `TYP`), so they cannot simply be globals |
 | `EXIT(PROC)` (leave several levels: `EXIT(PASCALCOMPILER)` on an error) | `setjmp` / `longjmp` |
-| `MARK` / `RELEASE` (a block's symbols freed at its end) | the same, on the P-System heap (Tiny-C's heap mark); an arena with marks on the host |
+| `MARK` / `RELEASE` (a block's symbols freed at its end) | the same, on the P-System heap (UCSD-C's heap mark); an arena with marks on the host |
 | `IDSEARCH`, `TREESEARCH` (the interpreter's built-ins for identifiers and the symbol trees) | C functions doing exactly what the interpreter does (its reserved-word table, its comparison) |
-| `REAL` (constants: `NUMBER`, negation) | Tiny-C's float, the P-machine's real; on the host the P-machine's real format and operations |
+| `REAL` (constants: `NUMBER`, negation) | UCSD-C's float, the P-machine's real; on the host the P-machine's real format and operations |
 | `BLOCKREAD` / `BLOCKWRITE` on the work files, `OPENOLD` / `OPENNEW`, `TEXT` output | a small I/O layer: on the P-System the operating system's file procedures, on the host plain files (`.TEXT` as UCSD text pages) |
 | segments (`DECLARATIONPART`, `BODYPART`, `UNITPART`, ...) | `#pragma segment`, as the Pascal ones, so that it fits in memory |
 
@@ -42,7 +42,7 @@ BLOCK.TEXT's compile summary.
    expressions and statements, units, block -- compared on the corpus as soon as
    whole programs compile.
 3. Byte-identical on the whole corpus; the compiler's own source compiled by it.
-4. Tiny-C build on the P-System, from the shell (`PC NAME`); memory (segments,
+4. UCSD-C build on the P-System, from the shell (`PC NAME`); memory (segments,
    heap) tuned; compiling the compiler there.
 5. The PASCAL-C: volume (sources, the compiler) in UCSD-Pascal-Volumes.
 6. Phase 2: better code generation; SYSTEM.COMPILER.

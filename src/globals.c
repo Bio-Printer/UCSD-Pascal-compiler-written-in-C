@@ -58,6 +58,6 @@ struct PFILE *INCLFILE, *LIBRARY;
 struct PFILE *LP;
 INTEGER CURBYTE, CURBLK;
 CHAR DISKBUF[512];
-#ifndef __TINYC__
+#ifndef __UCSDC__
 jmp_buf EXITPC;
 #endif

@@ -1,5 +1,5 @@
 PROGRAM PI;
-(* Archimedes' method with DOUBLEs: Tiny-C's tests/pi.c in Pascal.
+(* Archimedes' method with DOUBLEs: UCSD-C's tests/pi.c in Pascal.
    Polygons with 6, 12, 24, ... sides inside and around a circle of
    diameter 1: their perimeters are a lower and an upper bound for pi.
    Doubling the sides:
