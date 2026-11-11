@@ -351,9 +351,9 @@ void COMPINIT(void)
     if (NOISY) {
         for (IC = 1; IC <= 7; IC++)
             WLN(NULL);
-        WSTR(NULL, "PASCAL Compiler [II.0.A.1]   EDN Built! ");
+        WSTR(NULL, "PASCAL Compiler [II.0.A.1]   With Double Precision Floating point! ");
         WLN(NULL);
-        WSTR(NULL, "<edn0>");
+        WSTR(NULL, "<EDN0>");
     }
     DISPLAY[0].FNAME = NULL;
     DISPLAY[0].FFILE = NULL;
